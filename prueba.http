@@ -1,9 +1,8 @@
-POST http://localhost:3000/api/auth/login
+POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "nuevo.usuario@uce.edu.ec",
-  "password": "Password123"
+  "email": "nuevo2.usuario@uce.edu.ec",
+  "password": "Password123",
+  "role": "STUDENT"
 }
-
-
