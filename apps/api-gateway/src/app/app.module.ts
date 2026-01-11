@@ -32,5 +32,17 @@ export class AppModule implements NestModule {
         })
       )
       .forRoutes('api/profiles');
+    // 3. REGLA: Assessments (Tests Psicológicos) -> Puerto 3002
+    consumer
+      .apply(
+        createProxyMiddleware({
+          target: 'http://localhost:3002',
+          changeOrigin: true,
+          pathRewrite: { 
+            '^/': '/api/assessments/', 
+          },
+        })
+      )
+      .forRoutes('api/assessments');
   }
 }
