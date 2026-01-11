@@ -1,0 +1,36 @@
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+
+@Module({
+  imports: [],
+  controllers: [],
+  providers: [],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    // 1. AUTH (Igual que antes)
+    consumer
+      .apply(
+        createProxyMiddleware({
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          pathRewrite: { '^/': '/api/auth/' },
+        })
+      )
+      .forRoutes('api/auth');
+
+    // 2. PROFILES (Ahora apuntamos a /api/profiles)
+    consumer
+      .apply(
+        createProxyMiddleware({
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+          // REGLA NUEVA: Reconstruimos la ruta con /api
+          pathRewrite: { 
+            '^/': '/api/profiles/', 
+          },
+        })
+      )
+      .forRoutes('api/profiles');
+  }
+}
