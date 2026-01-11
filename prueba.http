@@ -1,72 +1,9 @@
-POST http://localhost:3000/api/auth/register
-Content-Type: application/json
-
-{
-  "email": "usuario.seguro@uce.edu.ec",
-  "password": "Password123",
-  "role": "STUDENT"
-}
-
-### LOGIN (Obtener Token)
 POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-  "email": "usuario.seguro@uce.edu.ec",
+  "email": "nuevo.usuario@uce.edu.ec",
   "password": "Password123"
 }
 
-### 3. VER PERFIL (Ruta Protegida)
 
-GET http://localhost:3000/api/auth/profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyN2Y3NTIyNC02Njc0LTQxOGMtOWE2ZC1jM2MwOWU5MGQ2ZDAiLCJlbWFpbCI6InVzdWFyaW8uc2VndXJvQHVjZS5lZHUuZWMiLCJyb2xlIjoiU1RVREVOVCIsImlhdCI6MTc2ODEwMTY2NSwiZXhwIjoxNzY4MTA1MjY1fQ.WtM2_Jz6RVgx13fEAf2YDqNK4arF1muRUPrBBBAWz88
-
-
-### CREAR PERFIL (User-Profile Service - Puerto 3001)
-POST http://localhost:3001/api/profiles
-Content-Type: application/json
-
-{
-  "userId": "PEGA_AQUI_EL_ID_DEL_USUARIO_DEL_LOGIN",
-  "firstName": "Xavier",
-  "lastName": "M",
-  "phoneNumber": "0991234567",
-  "address": "Quito, Ecuador"
-}
-
-### LEER PERFIL (User-Profile Service)
-GET http://localhost:3001/api/profiles/034e0f92-26df-4d83-9029-5a86618ab451
-
-
-
-
-
-
-### PRUEBA MAESTRA: Login Correcto
-POST http://localhost:3333/api/auth/login
-Content-Type: application/json
-
-{
-  "email": "usuario.seguro@uce.edu.ec",
-  "password": "Password123"
-}
-
-### ---------------------------------------------------
-### PRUEBA 2: Conectar con Microservicio de PERFILES
-### El Gateway recibe en 3333 -> Redirige a 3001
-### ---------------------------------------------------
-
-### CREAR PERFIL
-POST http://localhost:3333/api/profiles
-Content-Type: application/json
-
-{
-  "userId": "PEGA_AQUI_EL_ID_QUE_COPIASTE",
-  "firstName": "Estudiante",
-  "lastName": "Ingeniería",
-  "phoneNumber": "0998765432",
-  "address": "Universidad Central del Ecuador"
-}
-
-### CONSULTAR PERFIL
-GET http://localhost:3333/api/profiles/PEGA_AQUI_EL_ID_QUE_COPIASTE
