@@ -198,6 +198,24 @@
         "${workspaceFolder}/apps/audit-log/dist/**/*.(m|c|)js",
         "!**/node_modules/**"
       ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug resource-library with Nx",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "serve", "resource-library"],
+      "env": {
+        "NODE_OPTIONS": "--inspect=9240"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/apps/resource-library/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ]
     }
   ]
 }
