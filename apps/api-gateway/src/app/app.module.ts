@@ -57,5 +57,16 @@ export class AppModule implements NestModule {
         })
       )
       .forRoutes('api/appointments');
+
+    // 5. RESOURCE LIBRARY -> Puerto 3007
+    consumer
+      .apply(createProxyMiddleware({
+          target: 'http://localhost:3007',
+          changeOrigin: true,
+          pathRewrite: { '^/': '/api/resources/' },
+      }))
+      .forRoutes('api/resources');
+
+    // (El Audit-Log no necesita Gateway porque es interno/pasivo, nadie lo llama desde afuera)
   }
 }
