@@ -162,6 +162,24 @@
         "${workspaceFolder}/apps/analytics-engine/dist/**/*.(m|c|)js",
         "!**/node_modules/**"
       ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug support-chat with Nx",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "serve", "support-chat"],
+      "env": {
+        "NODE_OPTIONS": "--inspect=9238"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/apps/support-chat/dist/**/*.(m|c|)js",
+        "!**/node_modules/**"
+      ]
     }
   ]
 }
