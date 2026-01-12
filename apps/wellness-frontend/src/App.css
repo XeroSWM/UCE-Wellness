@@ -1,0 +1,158 @@
+/* Reset básico */
+body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f4f7fa; }
+
+/* Colores UCE */
+:root {
+  --uce-blue: #0f2a4a; /* Azul oscuro del sidebar */
+  --uce-yellow: #fbbf24; /* Amarillo de botones */
+  --text-dark: #333;
+}
+
+.btn-primary {
+  background-color: var(--uce-yellow);
+  color: var(--uce-blue);
+  font-weight: bold;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: 0.3s;
+}
+
+.btn-primary:hover { opacity: 0.9; transform: scale(1.02); }
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.auth-container {
+  display: flex;
+  height: 100vh;
+}
+
+.auth-left {
+  flex: 1;
+  background-color: var(--uce-blue);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.auth-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+}
+
+/* --- ESTILOS DEL DASHBOARD --- */
+
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  background-color: #f4f7fa;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background-color: var(--uce-blue);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; }
+.brand h2 { font-size: 1.2rem; margin: 0; }
+
+.sidebar nav { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.sidebar nav a {
+  display: flex; align-items: center; gap: 12px;
+  color: #a0aec0; text-decoration: none;
+  padding: 12px; border-radius: 8px; transition: 0.3s;
+}
+.sidebar nav a:hover, .sidebar nav a.active {
+  background-color: rgba(255,255,255,0.1);
+  color: var(--uce-yellow);
+}
+
+.btn-crisis {
+  background-color: #e53e3e; color: white; width: 100%; border: none;
+  padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 10px;
+}
+
+.btn-logout {
+  background: none; border: 1px solid #4a5568; color: #a0aec0; width: 100%;
+  padding: 10px; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1; padding: 30px; overflow-y: auto;
+}
+
+.welcome-banner {
+  background: linear-gradient(135deg, var(--uce-blue) 0%, #1a365d 100%);
+  color: white; padding: 30px; border-radius: 15px; margin-bottom: 30px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.welcome-banner h1 { margin: 0 0 10px 0; }
+.btn-action {
+  padding: 10px 20px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer; margin-right: 10px;
+}
+.btn-action.primary { background-color: var(--uce-yellow); color: var(--uce-blue); }
+.btn-action.secondary { background-color: rgba(255,255,255,0.2); color: white; }
+
+/* Widgets Grid */
+.widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+  gap: 20px;
+}
+
+.card {
+  background: white; padding: 20px; border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.card.full-width { grid-column: span 3; } /* Ocupa todo el ancho */
+
+/* Estilos de Tarjetas Específicas */
+.cita-card { text-align: center; }
+.cita-card .icon-bg { background: #ebf8ff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+.highlight { font-size: 1.2rem; font-weight: bold; color: var(--uce-blue); }
+.subtext { color: #718096; font-size: 0.9rem; margin-bottom: 15px; }
+.btn-small { background: var(--uce-blue); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+
+.alert-item { padding: 10px; border-left: 4px solid; margin-bottom: 10px; background: #fffaf0; }
+.alert-item.warning { border-color: #ed8936; }
+.alert-item.info { border-color: #4299e1; background: #ebf8ff; }
+.alert-item p { margin: 5px 0 0 0; font-size: 0.85rem; color: #4a5568; }
+
+/* Microservicios */
+.microservices-grid { display: flex; flex-wrap: wrap; gap: 15px; }
+.service-badge {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 0.8rem;
+}
+.service-badge .dot { width: 8px; height: 8px; background: #48bb78; border-radius: 50%; }
