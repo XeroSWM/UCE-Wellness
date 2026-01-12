@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Inject, HttpCode, HttpStatus, Get, UseGuards, Request } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AuthGuard } from '@nestjs/passport'; // <--- Ahora sí funcionará esta línea
+import { AuthGuard } from '@nestjs/passport';
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
 import { LoginUserUseCase } from '../../application/use-cases/login-user.use-case';
 import { IUserRepository } from '../../application/ports/user-repository.interface';
@@ -22,8 +22,16 @@ export class AuthController {
   // 1. REGISTRO (Público)
   @Post('register')
   async register(@Body() body: any) {
-    const { email, password, role } = body;
-    return await this.registerUserUseCase.execute(email, password, role);
+    // 👇 AQUÍ ESTÁ EL CAMBIO: Extraemos 'name' del body
+    const { name, email, password, role } = body;
+    
+    // 👇 Pasamos el 'name' como primer argumento (con un valor por defecto por seguridad)
+    return await this.registerUserUseCase.execute(
+      name || 'Usuario Sin Nombre', 
+      email, 
+      password, 
+      role || 'STUDENT'
+    );
   }
 
   // 2. LOGIN (Público) - Devuelve el Token
@@ -35,12 +43,12 @@ export class AuthController {
   }
 
   // 3. PERFIL (Privado) - Requiere Token válido
-  @UseGuards(AuthGuard('jwt')) // <--- El Portero de Seguridad
+  @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   getProfile(@Request() req) {
     return {
       message: '¡Acceso autorizado a zona segura!',
-      user_data: req.user, // Datos desencriptados del token
+      user_data: req.user,
     };
   }
 }

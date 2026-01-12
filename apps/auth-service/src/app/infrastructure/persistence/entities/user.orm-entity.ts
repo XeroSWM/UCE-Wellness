@@ -5,6 +5,10 @@ export class UserOrmEntity {
   @PrimaryColumn('uuid')
   id: string;
 
+  // 👇 AQUÍ ESTÁ EL CAMBIO: Agregamos la columna nombre
+  @Column({ nullable: true })
+  name: string;
+
   @Column({ unique: true })
   email: string;
 
