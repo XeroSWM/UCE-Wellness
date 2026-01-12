@@ -10,17 +10,15 @@ export class AppointmentService {
     @InjectRepository(Appointment)
     private appointmentRepository: Repository<Appointment>,
     
-    // Inyectamos el cliente de RabbitMQ que configuramos en el Module
     @Inject('NOTIFICATIONS_SERVICE') private readonly rabbitClient: ClientProxy,
   ) {}
 
   async create(data: any): Promise<Appointment> {
-    // 1. Guardar en PostgreSQL
-    const newAppointment = this.appointmentRepository.create(data);
-    const savedAppointment = await this.appointmentRepository.save(newAppointment);
+    // CORRECCIÓN: Usamos 'save' directo para evitar confusión de tipos
+    // Esto guarda el objeto y devuelve la cita creada en una sola línea
+    const savedAppointment = await this.appointmentRepository.save(data);
 
-    // 2. Enviar evento a RabbitMQ (Asíncrono)
-    // El primer argumento 'appointment_created' es el "Nombre del Evento"
+    // Enviar evento a RabbitMQ
     this.rabbitClient.emit('appointment_created', savedAppointment);
 
     return savedAppointment;
