@@ -6,10 +6,12 @@ import { AssessmentService } from './application/assessment.service';
 
 @Module({
   imports: [
-    // 1. Conexión a la Base de Datos MongoDB (Contenedor Docker)
-    MongooseModule.forRoot('mongodb://localhost:27017/uce-wellness-assessments'),
+    // CORRECCIÓN: Agregamos "admin:securepassword@" antes de localhost
+    // y "?authSource=admin" al final para decirle dónde está guardado el usuario.
+    MongooseModule.forRoot(
+      'mongodb://admin:securepassword@localhost:27017/uce-wellness-assessments?authSource=admin'
+    ),
     
-    // 2. Registro del Esquema (Schema) para que NestJS pueda guardar datos
     MongooseModule.forFeature([
       { name: Assessment.name, schema: AssessmentSchema }
     ]),

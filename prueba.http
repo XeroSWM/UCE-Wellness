@@ -1,8 +1,28 @@
-POST http://localhost:3000/api/auth/register
+### =============================================
+### PRUEBA 3: MICROSERVICIO DE ASSESSMENTS (MongoDB)
+### =============================================
+
+### CREAR UN TEST DE ANSIEDAD
+POST http://localhost:3333/api/assessments
 Content-Type: application/json
 
 {
-  "email": "nuevo2.usuario@uce.edu.ec",
-  "password": "Password123",
-  "role": "STUDENT"
+  "title": "Test de Ansiedad Generalizada (GAD-7)",
+  "description": "Evalúa síntomas de ansiedad en las últimas 2 semanas.",
+  "questions": [
+    {
+      "text": "¿Te has sentido nervioso o muy alterado?",
+      "options": ["Nunca", "Varios días", "Más de la mitad de los días", "Casi todos los días"],
+      "weight": 1
+    },
+    {
+      "text": "¿No has podido dejar de preocuparte?",
+      "options": ["Nunca", "Varios días", "Más de la mitad de los días", "Casi todos los días"],
+      "weight": 1
+    }
+  ],
+  "isActive": true
 }
+
+### CONSULTAR TODOS LOS TESTS
+GET http://localhost:3333/api/assessments
