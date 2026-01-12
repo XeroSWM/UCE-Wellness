@@ -42,11 +42,27 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - wellness-net
+  # 4. MQTT Broker (Mosquitto) - Para Telemetría en Tiempo Real
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: uce_mosquitto
+    ports:
+      - "1883:1883" # Puerto para que los microservicios se conecten
+      - "9001:9001" # Websockets (por si el Frontend conecta directo)
+    volumes:
+      - mosquitto_conf:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - wellness-net
 
 volumes:
   mongo_data:
   rabbitmq_data:
-
+  mosquitto_conf: # <--- Nuevo
+  mosquitto_data: # <--- Nuevo
+  mosquitto_log:  # <--- Nuevo
+  
 networks:
   wellness-net:
     driver: bridge
