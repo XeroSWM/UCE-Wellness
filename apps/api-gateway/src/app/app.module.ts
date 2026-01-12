@@ -44,5 +44,18 @@ export class AppModule implements NestModule {
         })
       )
       .forRoutes('api/assessments');
+
+    // 4. CITAS MÉDICAS -> Puerto 3003
+    consumer
+      .apply(
+        createProxyMiddleware({
+          target: 'http://localhost:3003',
+          changeOrigin: true,
+          pathRewrite: { 
+            '^/': '/api/appointments/', 
+          },
+        })
+      )
+      .forRoutes('api/appointments');
   }
 }
