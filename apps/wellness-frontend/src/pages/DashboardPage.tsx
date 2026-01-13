@@ -1,12 +1,12 @@
 import React from 'react';
 import { 
   LayoutDashboard, ClipboardList, Calendar, Bot, BookOpen, 
-  Activity, AlertTriangle, LogOut, HeartPulse 
+  Activity, AlertTriangle, LogOut, HeartPulse, Users, FileText, Shield, Database 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Datos simulados para la gráfica (mientras conectamos el Backend real)
+// Datos simulados (Mock Data)
 const data = [
   { name: 'Lun', stress: 40 }, { name: 'Mar', stress: 30 },
   { name: 'Mie', stress: 60 }, { name: 'Jue', stress: 45 },
@@ -16,7 +16,16 @@ const data = [
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{"name": "Xavier"}');
+  
+  // 1. LEEMOS EL USUARIO DEL LOCALSTORAGE
+  // Si no hay usuario, usamos un objeto vacío para evitar errores
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  // 2. OBTENEMOS EL ROL (Si no tiene, asumimos 'student')
+  // Nota: Asegúrate de que tu Login guarde el rol en localStorage, 
+  // si no, aquí siempre será 'student'.
+  const role = user.role || 'student'; 
+  const userName = user.name || 'Usuario';
 
   const handleLogout = () => {
     localStorage.clear();
@@ -25,7 +34,7 @@ export const DashboardPage = () => {
 
   return (
     <div className="dashboard-container">
-      {/* 1. SIDEBAR (Menú Lateral) */}
+      {/* --- SIDEBAR --- */}
       <aside className="sidebar">
         <div className="brand">
           <Activity size={32} color="#fbbf24" />
@@ -33,45 +42,88 @@ export const DashboardPage = () => {
         </div>
         
         <nav>
+          {/* Enlace común para todos */}
           <a href="#" className="active"><LayoutDashboard size={20}/> Inicio</a>
-          <a href="#"><ClipboardList size={20}/> Evaluaciones</a>
-          <a href="#"><Calendar size={20}/> Citas</a>
-          <a href="#"><Bot size={20}/> Asistente IA</a>
-          <a href="#"><BookOpen size={20}/> Biblioteca</a>
-          <a href="#"><HeartPulse size={20}/> Mi Progreso</a>
+          
+          {/* --- VISTA ESTUDIANTE --- */}
+          {role === 'student' && (
+            <>
+              <a href="#"><ClipboardList size={20}/> Evaluaciones</a>
+              <a href="#"><Calendar size={20}/> Mis Citas</a>
+              <a href="#"><Bot size={20}/> Asistente IA</a>
+              <a href="#"><BookOpen size={20}/> Biblioteca</a>
+              <a href="#"><HeartPulse size={20}/> Mi Progreso</a>
+            </>
+          )}
+
+          {/* --- VISTA ESPECIALISTA (DOCTOR) --- */}
+          {role === 'specialist' && (
+            <>
+              <a href="#"><Users size={20}/> Pacientes</a>
+              <a href="#"><Calendar size={20}/> Agenda Médica</a>
+              <a href="#"><FileText size={20}/> Historiales</a>
+              <a href="#"><Activity size={20}/> Telemetría</a>
+            </>
+          )}
+
+          {/* --- VISTA ADMINISTRADOR --- */}
+          {role === 'admin' && (
+            <>
+              <a href="#"><Shield size={20}/> Gestión Usuarios</a>
+              <a href="#"><Database size={20}/> Base de Datos</a>
+              <a href="#"><AlertTriangle size={20}/> Logs de Error</a>
+            </>
+          )}
         </nav>
 
         <div className="logout-section">
-          <button className="btn-crisis">
-            <AlertTriangle size={18}/> BOTÓN DE CRISIS
-          </button>
+          {role === 'student' && (
+            <button className="btn-crisis">
+              <AlertTriangle size={18}/> BOTÓN DE CRISIS
+            </button>
+          )}
           <button className="btn-logout" onClick={handleLogout}>
             <LogOut size={18}/> Cerrar Sesión
           </button>
         </div>
       </aside>
 
-      {/* 2. CONTENIDO PRINCIPAL */}
+      {/* --- CONTENIDO PRINCIPAL --- */}
       <main className="main-content">
         
-        {/* Banner de Bienvenida */}
+        {/* Banner de Bienvenida Dinámico */}
         <header className="welcome-banner">
           <div>
-            <h1>¡Hola de nuevo, {user.name}! 👋</h1>
-            <p>Tu bienestar es nuestra prioridad hoy. ¿Cómo te sientes?</p>
+            <h1>
+              {/* Cambia el saludo según el rol */}
+              {role === 'specialist' ? '👨‍⚕️ Dr/a. ' : '👋 Hola de nuevo, '} 
+              {userName}!
+            </h1>
+            <p>
+              {role === 'student' && 'Tu bienestar es nuestra prioridad hoy. ¿Cómo te sientes?'}
+              {role === 'specialist' && 'Tienes 3 consultas pendientes y 1 alerta de paciente.'}
+              {role === 'admin' && 'El sistema opera al 100% de capacidad. Sin incidentes.'}
+            </p>
+            
             <div className="action-buttons">
-              <button className="btn-action primary">Tomar Test Diario</button>
-              <button className="btn-action secondary">Ver Recursos</button>
+              {role === 'student' ? (
+                <>
+                  <button className="btn-action primary">Tomar Test Diario</button>
+                  <button className="btn-action secondary">Ver Recursos</button>
+                </>
+              ) : (
+                <button className="btn-action primary">Ver Panel de Control</button>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Grilla de Widgets */}
+        {/* Grilla de Widgets (Por ahora mostramos la gráfica a todos) */}
         <div className="widgets-grid">
-          
-          {/* Widget 1: Gráfica de Progreso */}
           <div className="card">
-            <h3>Progreso Semanal (Nivel de Estrés)</h3>
+            <h3>
+              {role === 'specialist' ? 'Pacientes Atendidos' : 'Progreso Semanal'}
+            </h3>
             <div style={{ width: '100%', height: 150 }}>
               <ResponsiveContainer>
                 <LineChart data={data}>
@@ -83,35 +135,21 @@ export const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Widget 2: Próxima Cita */}
           <div className="card cita-card">
             <div className="icon-bg"><Calendar size={24} color="#0984e3"/></div>
             <div>
-              <h3>Próxima Cita</h3>
-              <p className="highlight">Mañana a las 10:30 AM</p>
-              <p className="subtext">Sesión de seguimiento con Dr. J. Guevara</p>
-              <button className="btn-small">Preparar Sesión</button>
+              <h3>Agenda</h3>
+              <p className="highlight">10:30 AM</p>
+              <p className="subtext">
+                {role === 'student' ? 'Cita con Dr. Guevara' : 'Paciente: Juan Pérez'}
+              </p>
             </div>
           </div>
 
-          {/* Widget 3: Alertas Recientes */}
-          <div className="card alerts-card">
-            <h3>🔔 Alertas Recientes</h3>
-            <div className="alert-item warning">
-              <strong>Nivel de Estrés Elevado</strong>
-              <p>Tu biometría indica aumento de cortisol. ¡Tómate un descanso!</p>
-            </div>
-            <div className="alert-item info">
-              <strong>Nueva Guía Disponible</strong>
-              <p>Cómo manejar la ansiedad antes de los exámenes finales.</p>
-            </div>
-          </div>
-
-          {/* Widget 4: Estado del Ecosistema (Microservicios) */}
           <div className="card full-width">
-            <h3>⚡ Estado del Ecosistema Distribuido</h3>
+            <h3>⚡ Estado del Ecosistema</h3>
             <div className="microservices-grid">
-              {['Auth', 'Profile', 'Assessment', 'Appointment', 'Notification', 'Telemetry', 'Chat', 'Analytics'].map((service) => (
+              {['Auth', 'Profiles', 'Appointments', 'Analytics'].map((service) => (
                 <div className="service-badge online" key={service}>
                   <div className="dot"></div>
                   <span>{service} Service</span>
@@ -119,7 +157,6 @@ export const DashboardPage = () => {
               ))}
             </div>
           </div>
-
         </div>
       </main>
     </div>
