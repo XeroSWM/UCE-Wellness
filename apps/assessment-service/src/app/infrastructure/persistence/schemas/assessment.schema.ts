@@ -8,8 +8,11 @@ class Question {
   @Prop({ required: true }) 
   text: string;
 
-  @Prop([String])    
-  options: string[];
+  @Prop([{ 
+    label: { type: String, required: true }, 
+    value: { type: Number, required: true } 
+  }])
+  options: { label: string; value: number }[];
 
   @Prop() 
   weight: number;
