@@ -3,7 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Activity, LogIn } from 'lucide-react';
 
-export const LoginPage = () => {
+// CAMBIO IMPORTANTE: Usamos 'export default function'
+export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,6 +16,7 @@ export const LoginPage = () => {
 
     try {
       // 1. Petición al API Gateway -> Auth Service
+      // Asegúrate de que tu backend esté corriendo en este puerto
       const response = await axios.post('http://localhost:3333/api/auth/login', {
         email,
         password
@@ -25,37 +27,36 @@ export const LoginPage = () => {
       // 2. Extraer los datos
       const { accessToken, user } = response.data;
 
-      // 3. LÓGICA INTELIGENTE DE NOMBRE:
-      // Si el backend trae el nombre (user.name), lo usamos.
-      // Si viene vacío o null, usamos la primera parte del correo (ej: "xavier" de "xavier@uce...")
+      // 3. LÓGICA DE NOMBRE:
+      // Si el backend no trae nombre, usamos la primera parte del correo
       const nameToSave = user && user.name 
         ? user.name 
         : email.split('@')[0];
 
-      // 4. Preparar el objeto de usuario completo para guardar
+      // 4. Preparar el objeto de usuario completo
       const userToSave = {
         ...user,            // Mantenemos id, email, role, etc.
         name: nameToSave,   // Forzamos que tenga un nombre visible
-        role: user.role || 'student' // Aseguramos que tenga un rol por defecto
+        role: user.role || 'student' // Aseguramos un rol por defecto
       };
 
       // 5. Guardar en el navegador (LocalStorage)
       localStorage.setItem('token', accessToken);
       localStorage.setItem('user', JSON.stringify(userToSave));
 
-      // 6. Redirigir al Dashboard
-      // (Opcional: Mostrar alerta si quieres, pero suele ser mejor ir directo)
-      navigate('/dashboard');
+      // 6. Redirigir al Dashboard del Estudiante
+      // CAMBIO: Redirige a la ruta correcta dentro del StudentLayout
+      navigate('/student/dashboard');
 
     } catch (err: any) {
       console.error("Error en Login:", err);
       
       // Manejo de errores visual
       if (err.response) {
-        // Error que viene del servidor (ej: 401 Credenciales inválidas)
+        // Error del servidor (ej: 401 Credenciales inválidas)
         setError('Correo o contraseña incorrectos.');
       } else if (err.message) {
-        // Error de conexión (Gateway apagado)
+        // Error de conexión
         setError(`Error de conexión: ${err.message}`);
       } else {
         setError('Ocurrió un error inesperado.');
@@ -71,7 +72,7 @@ export const LoginPage = () => {
         <h1>UCE Wellness</h1>
         <p>Asistente de Bienestar Universitario</p>
         <p style={{ marginTop: '20px', opacity: 0.8, maxWidth: '300px', lineHeight: '1.5' }}>
-          Tu salud mental y física es nuestra prioridad. Accede a tus evaluaciones, citas y recursos exclusivos.
+          Tu salud mental es nuestra prioridad. Accede a tus evaluaciones, citas y recursos exclusivos.
         </p>
       </div>
 
@@ -137,4 +138,4 @@ export const LoginPage = () => {
       </div>
     </div>
   );
-};
+}

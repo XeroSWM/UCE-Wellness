@@ -3,11 +3,12 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, Activity, Briefcase } from 'lucide-react';
 
-export const RegisterPage = () => {
+// CAMBIO IMPORTANTE: Usamos 'export default function' para evitar errores de importación
+export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('student'); // 👈 NUEVO: Estado para el rol (por defecto estudiante)
+  const [role, setRole] = useState('student'); // Por defecto estudiante
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -19,11 +20,12 @@ export const RegisterPage = () => {
       console.log("Enviando datos:", { name, email, password, role });
 
       // Enviamos el ROL junto con los demás datos
+      // Asegúrate de que tu backend esté corriendo en el puerto 3333
       await axios.post('http://localhost:3333/api/auth/register', {
         name,
         email,
         password,
-        role // <--- Importante: El backend debe recibir esto
+        role // El backend debe estar preparado para recibir esto
       });
 
       alert('¡Cuenta creada con éxito! Ahora inicia sesión.');
@@ -89,7 +91,7 @@ export const RegisterPage = () => {
               value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
             />
 
-            {/* 👇 NUEVO: SELECTOR DE ROL */}
+            {/* SELECTOR DE ROL */}
             <label style={{display: 'flex', alignItems: 'center', gap: 5, marginTop: 10}}>
               <Briefcase size={16}/> Selecciona tu Rol (Prueba)
             </label>
@@ -116,4 +118,4 @@ export const RegisterPage = () => {
       </div>
     </div>
   );
-};
+}

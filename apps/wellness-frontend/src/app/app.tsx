@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// Importa tus páginas existentes
+// 1. IMPORTACIONES
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 
-// Importa lo nuevo del Estudiante (RUTAS AJUSTADAS A TU ESTRUCTURA)
+// Importa lo del estudiante
 import StudentLayout from '../pages/student/StudentLayout';
 import Dashboard from '../pages/student/Dashboard';
 
@@ -12,21 +12,24 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rutas Públicas */}
+        {/* === RUTAS PÚBLICAS === */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         
-        {/* Redirección inicial */}
-        <Route path="/" element={<Navigate to="/student/dashboard" replace />} />
+        {/* CORRECCIÓN AQUÍ: */}
+        {/* Antes te mandaba al dashboard. Ahora te manda al Login por defecto */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* RUTAS DEL ESTUDIANTE */}
+        {/* === ROL ESTUDIANTE (Protegido) === */}
         <Route path="/student" element={<StudentLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
           
-          {/* Placeholders para que los botones funcionen por ahora */}
-          <Route path="agendar" element={<div className="p-8">Módulo de Agendamiento (Pronto)</div>} />
-          <Route path="historial" element={<div className="p-8">Historial Médico (Pronto)</div>} />
-          <Route path="perfil" element={<div className="p-8">Perfil de Usuario (Pronto)</div>} />
+          {/* Rutas adicionales */}
+          <Route path="evaluaciones" element={<div className="p-10">Evaluaciones (Pronto)</div>} />
+          <Route path="citas" element={<div className="p-10">Citas Médicas (Pronto)</div>} />
+          <Route path="asistente" element={<div className="p-10">Chat con IA (Pronto)</div>} />
+          <Route path="biblioteca" element={<div className="p-10">Biblioteca (Pronto)</div>} />
+          <Route path="progreso" element={<div className="p-10">Mi Progreso (Pronto)</div>} />
         </Route>
 
       </Routes>
