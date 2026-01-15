@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import TakingAssessmentPage from '../pages/student/TakingAssessmentPage';
+import EvaluationsPage from '../pages/student/EvaluationsPage';
 
 // 1. IMPORTACIONES
 import LoginPage from '../pages/LoginPage';
@@ -23,6 +25,12 @@ function App() {
         {/* === ROL ESTUDIANTE (Protegido) === */}
         <Route path="/student" element={<StudentLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
+          {/* RUTA DE SELECCIÓN DE TEST */}
+          <Route path="evaluaciones" element={<EvaluationsPage />} />
+
+          {/* RUTA PARA TOMAR EL TEST (DINÁMICA) */}
+          <Route path="evaluacion/:type" element={<TakingAssessmentPage />} />
+        
           
           {/* Rutas adicionales */}
           <Route path="evaluaciones" element={<div className="p-10">Evaluaciones (Pronto)</div>} />
