@@ -1,27 +1,40 @@
-import { randomUUID } from 'crypto';
+import { Injectable, Inject, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../domain/entities/user.entity';
-import { IUserRepository } from '../ports/user-repository.interface';
+import { UserRepository } from '../ports/user-repository.interface';
+// Importamos el DTO correcto que acabamos de definir arriba
+import { RegisterUserDto } from '../../infrastructure/controllers/dtos/register-user.dto';
 
+@Injectable()
 export class RegisterUserUseCase {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    @Inject('UserRepository') 
+    private readonly userRepository: UserRepository
+  ) {}
 
-  // 1. 👇 Agregamos 'name' aquí en los argumentos
-  async execute(name: string, email: string, password: string, role: 'STUDENT' | 'SPECIALIST' | 'ADMIN') {
+  async execute(registerUserDto: RegisterUserDto): Promise<User> {
+    // 1. Verificar si el usuario ya existe
+    const existingUser = await this.userRepository.findByEmail(registerUserDto.email);
     
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    if (existingUser) {
+      throw new ConflictException('El correo ya está registrado');
+    }
 
-    // 2. 👇 Pasamos 'name' al crear la Entidad de Dominio
-    // (Asegúrate de que tu archivo 'user.entity.ts' también acepte el nombre en esta posición)
+    // 2. Encriptar contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(registerUserDto.password, salt);
+
+    // 3. Crear la entidad de Usuario (Dominio)
     const newUser = new User(
-      randomUUID(), 
-      name,         // <--- ¡AQUÍ VA EL NOMBRE!
-      email,
-      passwordHash, 
-      role
+      null, // ID (se genera en base de datos)
+      registerUserDto.name || 'Usuario Sin Nombre', // Manejo de nombre opcional
+      registerUserDto.email,
+      hash,
+      registerUserDto.role || 'STUDENT', // Ahora .role sí existe en el DTO y no da error
+      true // isActive
     );
 
-    return await this.userRepository.save(newUser);
+    // 4. Guardar en Base de Datos
+    return this.userRepository.save(newUser);
   }
 }

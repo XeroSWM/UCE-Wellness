@@ -1,9 +1,10 @@
 import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 
-export class RegisterDto {
+// Usamos el nombre 'RegisterUserDto' para que coincida con el controlador
+export class RegisterUserDto {
   @IsString()
-  @IsOptional() // Lo ponemos opcional para que no falle si alguien no lo envía
-  name: string;  // <--- ¡AGREGA ESTO!
+  @IsOptional()
+  name: string; // Nombre del usuario (Opcional, pero recomendado)
 
   @IsEmail()
   email: string;
@@ -11,4 +12,9 @@ export class RegisterDto {
   @IsString()
   @MinLength(6)
   password: string;
+
+  // AGREGADO: Campo 'role' opcional para que TypeScript no se queje en el Caso de Uso
+  @IsString()
+  @IsOptional()
+  role?: string;
 }

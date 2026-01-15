@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import TakingAssessmentPage from '../pages/student/TakingAssessmentPage';
 import EvaluationsPage from '../pages/student/EvaluationsPage';
 import ProgressPage from '../pages/student/ProgressPage';
+import BookAppointmentPage from '../pages/student/BookAppointmentPage';
 
 // 1. IMPORTACIONES
 import LoginPage from '../pages/LoginPage';
@@ -35,7 +36,7 @@ function App() {
           
           {/* Rutas adicionales */}
           <Route path="evaluaciones" element={<div className="p-10">Evaluaciones (Pronto)</div>} />
-          <Route path="citas" element={<div className="p-10">Citas Médicas (Pronto)</div>} />
+          <Route path="citas" element={<BookAppointmentPage />} />
           <Route path="asistente" element={<div className="p-10">Chat con IA (Pronto)</div>} />
           <Route path="biblioteca" element={<div className="p-10">Biblioteca (Pronto)</div>} />
           <Route path="progreso" element={<ProgressPage />} />
