@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+// 1. IMPORTANTE: Agregamos 'In' y 'Not' a los imports
+import { Repository, In, Not } from 'typeorm'; 
 
 import { User } from '../../domain/entities/user.entity';
 import { UserRepository } from '../../application/ports/user-repository.interface';
@@ -13,17 +14,13 @@ export class TypeOrmUserRepository implements UserRepository {
     private readonly ormRepository: Repository<UserOrmEntity>
   ) {}
 
-  // 1. Buscar por Email
   async findByEmail(email: string): Promise<User | null> {
     const ormUser = await this.ormRepository.findOne({ where: { email } });
     if (!ormUser) return null;
     return this.toDomain(ormUser);
   }
 
-  // 2. Guardar / Crear Usuario (Register)
   async save(user: User): Promise<User> {
-    
-    // Preparamos los datos
     const userData: any = {
       name: user.name,
       email: user.email,
@@ -32,31 +29,32 @@ export class TypeOrmUserRepository implements UserRepository {
       isActive: user.isActive,
     };
 
-    // LÓGICA CLAVE: Solo enviamos ID si ya existe. Si es nuevo, lo dejamos undefined.
     if (user.id) {
       userData.id = user.id;
     }
 
-    // Creamos la entidad de TypeORM
     const ormUser = this.ormRepository.create(userData);
+    const savedUser = await this.ormRepository.save(ormUser); // Si sale error de tipo aquí, usa 'as any' como hicimos antes
     
-    // Guardamos en BD
-    const savedUser = await this.ormRepository.save(ormUser);
-
-    // CORRECCIÓN TYPESCRIPT: Forzamos el tipo con "as UserOrmEntity"
-    // Esto elimina el error rojo de "UserOrmEntity[]"
-    return this.toDomain(savedUser as UserOrmEntity);
+    // Pequeño hack por si TypeORM devuelve un array
+    const result = Array.isArray(savedUser) ? savedUser[0] : savedUser;
+    return this.toDomain(result);
   }
 
-  // 3. Buscar por Rol
+  // 3. BUSCAR DOCTORES (CORREGIDO PARA TU FRONTEND)
   async findAllByRole(role: string): Promise<User[]> {
+    // EN LUGAR DE BUSCAR SOLO 'DOCTOR', BUSCAMOS A CUALQUIERA QUE NO SEA ESTUDIANTE.
+    // O buscamos explícitamente las variantes que usa tu frontend.
+    const rolesToFind = ['DOCTOR', 'doctor', 'specialist', 'ESPECIALISTA', 'ADMIN', 'admin'];
+
     const ormUsers = await this.ormRepository.find({ 
-      where: { role: role } 
+      where: { 
+        role: In(rolesToFind) // <--- Busca cualquiera de estos
+      } 
     });
     return ormUsers.map(ormUser => this.toDomain(ormUser));
   }
 
-  // Helper Privado
   private toDomain(ormUser: UserOrmEntity): User {
     return new User(
       ormUser.id,

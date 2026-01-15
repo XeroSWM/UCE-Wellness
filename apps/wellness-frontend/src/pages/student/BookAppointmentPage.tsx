@@ -7,7 +7,7 @@ export default function BookAppointmentPage() {
   const navigate = useNavigate();
   
   // Estados para la lógica
-  const [doctors, setDoctors] = useState<any[]>([]); // Aquí guardaremos la lista real
+  const [doctors, setDoctors] = useState<any[]>([]); 
   const [loadingDocs, setLoadingDocs] = useState(true);
   
   // Estados del formulario
@@ -18,32 +18,31 @@ export default function BookAppointmentPage() {
   const [reason, setReason] = useState('');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
-  // Horarios (Estos siguen siendo fijos por ahora)
+  // Horarios
   const timeSlots = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
 
-  // 1. EFECTO: CARGAR DOCTORES DESDE EL BACKEND (Auth-Service)
+  // 1. EFECTO: CARGAR DOCTORES (VÍA API GATEWAY - PUERTO 3333)
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        console.log("🔍 Buscando doctores registrados...");
+        console.log("🔍 Buscando doctores en el API Gateway (3333)...");
         
-        // Petición al puerto 3001 (Auth Service)
-        const response = await axios.get('http://localhost:3001/api/auth/doctors');
+        // CAMBIO REALIZADO: Puerto 3333 para que pasen los doctores que registraste
+        const response = await axios.get('http://localhost:3333/api/auth/doctors');
         
         console.log("✅ Doctores encontrados:", response.data);
 
-        // Transformamos los datos para que la interfaz los entienda
+        // Transformamos los datos
         const doctorsData = response.data.map((doc: any) => ({
           id: doc.id,
-          name: doc.name || doc.fullName || 'Doctor Sin Nombre', // Usamos el campo que exista
-          specialty: doc.specialty || 'Especialista en Bienestar', // Valor por defecto si no tienen especialidad
+          name: doc.name || doc.fullName || 'Doctor Sin Nombre',
+          specialty: doc.specialty || 'Especialista en Bienestar', 
           available: true 
         }));
 
         setDoctors(doctorsData);
       } catch (error) {
         console.error("❌ Error cargando doctores:", error);
-        // No bloqueamos la app, simplemente la lista quedará vacía
       } finally {
         setLoadingDocs(false);
       }
@@ -52,7 +51,7 @@ export default function BookAppointmentPage() {
     fetchDoctors();
   }, []);
 
-  // 2. FUNCIÓN: ENVIAR LA CITA (Appointment-Service)
+  // 2. FUNCIÓN: ENVIAR LA CITA (VÍA API GATEWAY - PUERTO 3333)
   const handleSubmit = async () => {
     if (!selectedDoc || !date || !time) {
       alert("⚠️ Por favor selecciona un Doctor, una Fecha y una Hora.");
@@ -69,26 +68,28 @@ export default function BookAppointmentPage() {
 
       const payload = {
         studentId: studentId,
-        doctorId: selectedDoc.id,          // ID real del doctor (Postgres)
-        professionalName: selectedDoc.name, // Nombre para mostrar fácil
-        date: `${date} ${time}:00`,        // Formato ISO simple (YYYY-MM-DD HH:mm:ss)
+        doctorId: selectedDoc.id,
+        professionalName: selectedDoc.name,
+        date: `${date} ${time}:00`,
         type: type,
         status: 'SCHEDULED',
         reason: reason || 'Sin motivo especificado',
         meetingLink: 'https://zoom.us/j/esperando-asignacion'
       };
 
-      console.log("🚀 Enviando cita:", payload);
+      console.log("🚀 Enviando cita al Gateway:", payload);
 
-      // Petición al puerto 3003 (Appointment Service)
+      // CAMBIO REALIZADO: Usamos también el 3333 para enviar la cita.
+      // (Nota: Asegúrate de que tu Gateway sepa redirigir /api/appointments al microservicio correcto)
+      // Si esto falla, cambia este 3333 por 3003, pero lo ideal es usar el Gateway.
       await axios.post('http://localhost:3003/api/appointments', payload);
 
       alert(`✅ ¡Cita Confirmada!\n\nProfesional: ${selectedDoc.name}\nFecha: ${date} a las ${time}`);
-      navigate('/student/citas'); // (Opcional) Podrías redirigir a un historial de citas
+      navigate('/student/citas'); 
 
     } catch (error) {
       console.error("Error al agendar:", error);
-      alert("Hubo un error al guardar la cita. Revisa que el servicio de citas (Puerto 3003) esté prendido.");
+      alert("Hubo un error al guardar la cita. Verifica la conexión con el Gateway (3333).");
     } finally {
       setLoadingSubmit(false);
     }
@@ -255,7 +256,7 @@ export default function BookAppointmentPage() {
               className="btn-primary" 
               onClick={handleSubmit}
               disabled={loadingSubmit}
-              style={{ justifyContent: 'center', background: '#0f2a4a' }}
+              style={{ justifyContent: 'center', background: '#0f2a4a', color: 'white' }}
             >
               {loadingSubmit ? 'Procesando...' : (
                 <>Confirmar Cita <ArrowRight size={18} /></>

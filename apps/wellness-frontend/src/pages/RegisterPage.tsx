@@ -102,7 +102,7 @@ export default function RegisterPage() {
               style={{ backgroundColor: '#f8fafc' }}
             >
               <option value="STUDENT">🎓 Estudiante</option>
-              <option value="SPECIALIST">🥼 Especialista / Doctor</option>
+              <option value="DOCTOR">🥼 Especialista / Doctor</option>
               <option value="ADMIN">🛡️ Administrador</option>
             </select>
 
