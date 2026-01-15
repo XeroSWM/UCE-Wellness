@@ -30,7 +30,7 @@ export class RegisterUserUseCase {
       registerUserDto.name || 'Usuario Sin Nombre', // Manejo de nombre opcional
       registerUserDto.email,
       hash,
-      registerUserDto.role || 'STUDENT', // Ahora .role sí existe en el DTO y no da error
+      (registerUserDto as any).role || 'STUDENT',
       true // isActive
     );
 

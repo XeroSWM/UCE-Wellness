@@ -2,9 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-// Imports de tu dominio e infraestructura
 import { User } from '../../domain/entities/user.entity';
-import { UserRepository } from '../../application/ports/user-repository.interface'; // Nota: En tu proyecto se llama UserRepository
+import { UserRepository } from '../../application/ports/user-repository.interface';
 import { UserOrmEntity } from './entities/user.orm-entity';
 
 @Injectable()
@@ -14,49 +13,54 @@ export class TypeOrmUserRepository implements UserRepository {
     private readonly ormRepository: Repository<UserOrmEntity>
   ) {}
 
-  // 1. Buscar por Email (Login)
+  // 1. Buscar por Email
   async findByEmail(email: string): Promise<User | null> {
     const ormUser = await this.ormRepository.findOne({ where: { email } });
     if (!ormUser) return null;
-
-    // Usamos el helper para aplicar la corrección del nombre
     return this.toDomain(ormUser);
   }
 
   // 2. Guardar / Crear Usuario (Register)
   async save(user: User): Promise<User> {
-    // Mapeo Dominio -> ORM
-    const ormUser = this.ormRepository.create({
-      id: user.id,
-      name: user.name, // Aseguramos guardar el nombre
+    
+    // Preparamos los datos
+    const userData: any = {
+      name: user.name,
       email: user.email,
       passwordHash: user.passwordHash,
       role: user.role,
       isActive: user.isActive,
-    });
+    };
+
+    // LÓGICA CLAVE: Solo enviamos ID si ya existe. Si es nuevo, lo dejamos undefined.
+    if (user.id) {
+      userData.id = user.id;
+    }
+
+    // Creamos la entidad de TypeORM
+    const ormUser = this.ormRepository.create(userData);
     
+    // Guardamos en BD
     const savedUser = await this.ormRepository.save(ormUser);
 
-    // Mapeo ORM -> Dominio (con corrección)
-    return this.toDomain(savedUser);
+    // CORRECCIÓN TYPESCRIPT: Forzamos el tipo con "as UserOrmEntity"
+    // Esto elimina el error rojo de "UserOrmEntity[]"
+    return this.toDomain(savedUser as UserOrmEntity);
   }
 
-  // 3. Buscar por Rol (Para la lista de Doctores en Citas)
+  // 3. Buscar por Rol
   async findAllByRole(role: string): Promise<User[]> {
     const ormUsers = await this.ormRepository.find({ 
       where: { role: role } 
     });
-
-    // Mapeamos todos los doctores encontrados
     return ormUsers.map(ormUser => this.toDomain(ormUser));
   }
 
-  // --- HELPER PRIVADO (MApeo ORM a Dominio) ---
-  // Centralizamos la lógica aquí para no repetir el 'Sin Nombre' en todos lados
+  // Helper Privado
   private toDomain(ormUser: UserOrmEntity): User {
     return new User(
       ormUser.id,
-      ormUser.name || 'Sin Nombre', // <--- ¡AQUÍ ESTÁ LA CORRECCIÓN CLAVE!
+      ormUser.name || 'Sin Nombre',
       ormUser.email,
       ormUser.passwordHash,
       ormUser.role as any,

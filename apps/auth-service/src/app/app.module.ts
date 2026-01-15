@@ -1,10 +1,24 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthController } from './infrastructure/controllers/auth.controller';
-import { UserOrmEntity, TypeOrmUserRepository } from './infrastructure/persistence';
-import { JwtStrategy } from './infrastructure/strategies/jwt.strategy'; // <--- Importamos la estrategia
 import { PassportModule } from '@nestjs/passport';
+
+// Controllers
+import { AuthController } from './infrastructure/controllers/auth.controller';
+
+// Entidades
+import { UserOrmEntity } from './infrastructure/persistence/entities/user.orm-entity';
+
+// Repositorios
+import { TypeOrmUserRepository } from './infrastructure/persistence/typeorm-user.repository';
+
+// Strategies
+import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
+
+// Use Cases (AQUÍ ESTÁ LA CLAVE: Deben estar importados los 3)
+import { LoginUserUseCase } from './application/use-cases/login-user.use-case';
+import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
+import { FindDoctorsUseCase } from './application/use-cases/find-doctors.use-case';
 
 @Module({
   imports: [
@@ -19,26 +33,30 @@ import { PassportModule } from '@nestjs/passport';
       autoLoadEntities: true,
       synchronize: true,
     }),
-    // 2. Entidades de este módulo
     TypeOrmModule.forFeature([UserOrmEntity]),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
 
-    // 3. Configuración JWT (El "Sello" de seguridad)
+    // 2. Configuración de JWT
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      global: true,
-      secret: 'CLAVE_SECRETA_SUPER_SEGURA', // En producción esto va en variables de entorno (.env)
-      signOptions: { expiresIn: '1h' }, // El token expira en 1 hora
+      secret: 'ESTA_ES_LA_CLAVE_SECRETA', // Asegúrate de usar la misma clave que en JwtStrategy
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [AuthController],
   providers: [
-    // 4. Inyección del Repositorio
+    // 3. REGISTRO DE CASOS DE USO (¡Faltaba LoginUserUseCase aquí!)
+    LoginUserUseCase,
+    RegisterUserUseCase,
+    FindDoctorsUseCase,
+
+    // 4. Estrategias
+    JwtStrategy,
+
+    // 5. Inyección del Repositorio
     {
-      provide: 'IUserRepository',
+      provide: 'UserRepository',
       useClass: TypeOrmUserRepository,
     },
-    // 5. Inyección de la Estrategia (El "Portero")
-    JwtStrategy, 
   ],
 })
 export class AppModule {}

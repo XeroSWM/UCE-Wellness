@@ -101,9 +101,9 @@ export default function RegisterPage() {
               onChange={(e) => setRole(e.target.value)}
               style={{ backgroundColor: '#f8fafc' }}
             >
-              <option value="student">🎓 Estudiante</option>
-              <option value="specialist">🥼 Especialista / Doctor</option>
-              <option value="admin">🛡️ Administrador</option>
+              <option value="STUDENT">🎓 Estudiante</option>
+              <option value="SPECIALIST">🥼 Especialista / Doctor</option>
+              <option value="ADMIN">🛡️ Administrador</option>
             </select>
 
             <button type="submit" className="btn-primary" style={{ marginTop: '20px' }}>

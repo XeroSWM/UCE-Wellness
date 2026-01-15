@@ -1,11 +1,10 @@
-import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('users')
 export class UserOrmEntity {
-  @PrimaryColumn('uuid')
+  @PrimaryGeneratedColumn('uuid') // <--- ESTO ES VITAL
   id: string;
 
-  // 👇 AQUÍ ESTÁ EL CAMBIO: Agregamos la columna nombre
   @Column({ nullable: true })
   name: string;
 
@@ -15,7 +14,7 @@ export class UserOrmEntity {
   @Column()
   passwordHash: string;
 
-  @Column()
+  @Column({ default: 'STUDENT' })
   role: string;
 
   @Column({ default: true })
