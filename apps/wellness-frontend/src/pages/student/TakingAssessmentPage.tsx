@@ -4,9 +4,10 @@ import axios from 'axios';
 import { ArrowRight, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function TakingAssessmentPage() {
-  const { type } = useParams(); // 'estres' o 'beck'
+  const { type } = useParams(); // Recibe 'estres' o 'beck' desde la URL
   const navigate = useNavigate();
   
+  // Estados para manejar la lógica del test
   const [assessment, setAssessment] = useState<any>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({}); 
@@ -14,29 +15,26 @@ export default function TakingAssessmentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // 1. CARGAR EL TEST DESDE EL BACKEND
   useEffect(() => {
     const fetchAssessment = async () => {
       try {
         console.log("Iniciando búsqueda de test tipo:", type);
         
-        // 1. Pedimos TODOS los tests al backend
+        // Petición al microservicio de Evaluaciones
         const response = await axios.get('http://localhost:3002/api/assessments');
         const allAssessments = response.data;
         
-        console.log("Tests disponibles en BD:", allAssessments);
-
-        // 2. Estrategia de búsqueda flexible (Por Título en lugar de Código)
+        // Lógica para encontrar el test correcto según el parámetro de la URL
         let found = null;
 
         if (type === 'estres') {
-          // Busca algo que tenga "Estrés" o "PSS" en el título
           found = allAssessments.find((a: any) => 
             a.title.toLowerCase().includes('estrés') || 
             a.title.toLowerCase().includes('estres') ||
             a.title.includes('PSS')
           );
         } else if (type === 'beck') {
-          // Busca algo que tenga "Beck" o "Depresión" en el título
           found = allAssessments.find((a: any) => 
             a.title.toLowerCase().includes('beck') || 
             a.title.toLowerCase().includes('depresión')
@@ -62,33 +60,53 @@ export default function TakingAssessmentPage() {
     fetchAssessment();
   }, [type]);
 
-  // Manejo de selección
+  // 2. MANEJAR LA SELECCIÓN DE UNA OPCIÓN
   const handleSelectOption = (value: number) => {
     setAnswers(prev => ({
       ...prev,
       [currentQuestion]: value
     }));
     
-    // Auto-avanzar (con un pequeño delay para que se note la selección)
+    // Auto-avanzar a la siguiente pregunta después de un breve momento
     if (currentQuestion < (assessment?.questions.length || 0) - 1) {
       setTimeout(() => setCurrentQuestion(curr => curr + 1), 250);
     }
   };
 
-  // Enviar Resultados
+  // 3. ENVIAR RESULTADOS AL FINALIZAR
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
+      // Calcular puntaje total sumando las respuestas
       const totalScore = Object.values(answers).reduce((a, b) => a + b, 0);
       
-      // Aquí podrías guardar en el backend si tuvieras el endpoint listo
-      // await axios.post('http://localhost:3002/api/results', { ... });
+      // Obtener usuario del localStorage (para saber de quién es el resultado)
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      // Fallback por si estás probando sin login: usa un ID genérico
+      const userId = user?.id || user?._id || 'usuario_prueba_sin_login'; 
 
-      alert(`¡Evaluación Completada!\n\nTu puntaje calculado es: ${totalScore}\n\n(Este resultado debería guardarse en el historial)`);
-      navigate('/student/dashboard'); 
+      const payload = {
+        userId: userId,
+        assessmentTitle: assessment.title,
+        totalScore: totalScore,
+        maxScore: assessment.questions.length * 3, // Estimado (depende del test, Beck es 3, PSS es 4)
+        answers: answers
+      };
+
+      console.log("Enviando payload:", payload);
+
+      // ENVIAR AL BACKEND (Endpoint que creamos recién)
+      await axios.post('http://localhost:3002/api/assessments/results', payload);
+
+      alert(`¡Evaluación Guardada con Éxito!\n\nTu puntaje obtenido es: ${totalScore}`);
+      
+      // Redirigir a la página de progreso para ver el historial actualizado
+      navigate('/student/progreso'); 
+
     } catch (error) {
       console.error("Error enviando:", error);
-      alert("Error al guardar.");
+      alert("Error al guardar el resultado. Revisa la consola para más detalles.");
     } finally {
       setSubmitting(false);
     }
@@ -114,13 +132,14 @@ export default function TakingAssessmentPage() {
     </div>
   );
 
+  // Variables para la vista actual
   const question = assessment.questions[currentQuestion];
   const progress = ((currentQuestion + 1) / assessment.questions.length) * 100;
 
   return (
     <div className="dashboard-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
       
-      {/* Barra de Progreso */}
+      {/* BARRA DE PROGRESO SUPERIOR */}
       <div style={{ marginBottom: '30px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>
           <span style={{ fontWeight: 'bold', color: '#0f2a4a' }}>{assessment.title}</span>
@@ -131,8 +150,8 @@ export default function TakingAssessmentPage() {
         </div>
       </div>
 
-      {/* Tarjeta de Pregunta */}
-      <div className="card" style={{ minHeight: '400px', padding: '40px' }}>
+      {/* TARJETA DE PREGUNTA */}
+      <div className="card" style={{ minHeight: '400px', padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <h2 style={{ 
           fontSize: '1.5rem', 
           color: '#1e293b', 
@@ -144,6 +163,7 @@ export default function TakingAssessmentPage() {
           {question.text}
         </h2>
 
+        {/* Lista de Opciones */}
         <div style={{ display: 'grid', gap: '12px' }}>
           {question.options.map((opt: any, idx: number) => {
             const isSelected = answers[currentQuestion] === opt.value;
@@ -175,8 +195,9 @@ export default function TakingAssessmentPage() {
         </div>
       </div>
 
-      {/* Botones de Navegación */}
+      {/* BOTONES DE NAVEGACIÓN */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px', alignItems: 'center' }}>
+        {/* Botón Anterior */}
         <button 
           onClick={() => setCurrentQuestion(c => Math.max(0, c - 1))}
           disabled={currentQuestion === 0}
@@ -191,6 +212,7 @@ export default function TakingAssessmentPage() {
           <ArrowLeft size={20} /> Anterior
         </button>
 
+        {/* Botón Siguiente o Finalizar */}
         {currentQuestion === assessment.questions.length - 1 ? (
           <button 
             className="btn-primary" 

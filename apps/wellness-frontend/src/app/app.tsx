@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import TakingAssessmentPage from '../pages/student/TakingAssessmentPage';
 import EvaluationsPage from '../pages/student/EvaluationsPage';
+import ProgressPage from '../pages/student/ProgressPage';
 
 // 1. IMPORTACIONES
 import LoginPage from '../pages/LoginPage';
@@ -37,7 +38,7 @@ function App() {
           <Route path="citas" element={<div className="p-10">Citas Médicas (Pronto)</div>} />
           <Route path="asistente" element={<div className="p-10">Chat con IA (Pronto)</div>} />
           <Route path="biblioteca" element={<div className="p-10">Biblioteca (Pronto)</div>} />
-          <Route path="progreso" element={<div className="p-10">Mi Progreso (Pronto)</div>} />
+          <Route path="progreso" element={<ProgressPage />} />
         </Route>
 
       </Routes>
