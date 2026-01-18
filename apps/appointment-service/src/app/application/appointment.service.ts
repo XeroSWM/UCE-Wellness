@@ -1,30 +1,34 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ClientProxy } from '@nestjs/microservices';
-import { Appointment } from '../infrastructure/persistence/entities/appointment.entity';
+import { Appointment } from '../infrastructure/persistence/entities/appointment.entity'; 
+// (Asegúrate que la ruta de la entidad Appointment sea correcta)
 
 @Injectable()
-export class AppointmentService {
+export class AppointmentService { // <--- ¡OJO AQUÍ! Debe llamarse AppointmentService
   constructor(
     @InjectRepository(Appointment)
     private appointmentRepository: Repository<Appointment>,
-    
-    @Inject('NOTIFICATIONS_SERVICE') private readonly rabbitClient: ClientProxy,
   ) {}
 
-  async create(data: any): Promise<Appointment> {
-    // CORRECCIÓN: Usamos 'save' directo para evitar confusión de tipos
-    // Esto guarda el objeto y devuelve la cita creada en una sola línea
-    const savedAppointment = await this.appointmentRepository.save(data);
-
-    // Enviar evento a RabbitMQ
-    this.rabbitClient.emit('appointment_created', savedAppointment);
-
-    return savedAppointment;
+  // 1. Crear
+  async create(data: Partial<Appointment>): Promise<Appointment> {
+    const newAppointment = this.appointmentRepository.create(data);
+    return this.appointmentRepository.save(newAppointment);
   }
 
+  // 2. Ver Todas
   async findAll(): Promise<Appointment[]> {
     return this.appointmentRepository.find();
   }
+
+  // 3. Buscar por Estudiante (ESTE ES EL QUE TE FALTABA O TENÍA OTRO NOMBRE)
+  async findByStudent(studentId: string): Promise<Appointment[]> {
+    return this.appointmentRepository.find({
+      where: { studentId },
+      order: { date: 'ASC' }
+    });
+  }
+
+
 }
