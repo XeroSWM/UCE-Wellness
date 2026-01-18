@@ -1,46 +1,56 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import TakingAssessmentPage from '../pages/student/TakingAssessmentPage';
-import EvaluationsPage from '../pages/student/EvaluationsPage';
-import ProgressPage from '../pages/student/ProgressPage';
-import BookAppointmentPage from '../pages/student/BookAppointmentPage';
 
-// 1. IMPORTACIONES
+// === 1. IMPORTACIONES DE AUTENTICACIÓN ===
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 
-// Importa lo del estudiante
+// === 2. IMPORTACIONES DE ESTUDIANTE ===
 import StudentLayout from '../pages/student/StudentLayout';
 import Dashboard from '../pages/student/Dashboard';
+import EvaluationsPage from '../pages/student/EvaluationsPage';
+import TakingAssessmentPage from '../pages/student/TakingAssessmentPage'; // Tu nombre de archivo real
+import ProgressPage from '../pages/student/ProgressPage';           // Tu nombre de archivo real
+import BookAppointmentPage from '../pages/student/BookAppointmentPage';
+import LibraryPage from '../pages/student/LibraryPage';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        
         {/* === RUTAS PÚBLICAS === */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         
-        {/* CORRECCIÓN AQUÍ: */}
-        {/* Antes te mandaba al dashboard. Ahora te manda al Login por defecto */}
+        {/* Redirección por defecto al Login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* === ROL ESTUDIANTE (Protegido) === */}
+        {/* === ROL ESTUDIANTE (Protegido por Layout) === */}
         <Route path="/student" element={<StudentLayout />}>
-          <Route path="dashboard" element={<Dashboard />} />
-          {/* RUTA DE SELECCIÓN DE TEST */}
-          <Route path="evaluaciones" element={<EvaluationsPage />} />
-
-          {/* RUTA PARA TOMAR EL TEST (DINÁMICA) */}
-          <Route path="evaluacion/:type" element={<TakingAssessmentPage />} />
-        
           
-          {/* Rutas adicionales */}
-          <Route path="evaluaciones" element={<div className="p-10">Evaluaciones (Pronto)</div>} />
-          <Route path="citas" element={<BookAppointmentPage />} />
-          <Route path="asistente" element={<div className="p-10">Chat con IA (Pronto)</div>} />
-          <Route path="biblioteca" element={<div className="p-10">Biblioteca (Pronto)</div>} />
+          {/* Dashboard Principal */}
+          <Route path="dashboard" element={<Dashboard />} />
+          
+          {/* Evaluaciones */}
+          <Route path="evaluaciones" element={<EvaluationsPage />} />
+          <Route path="evaluacion/:id" element={<TakingAssessmentPage />} />
+          
+          {/* Progreso */}
           <Route path="progreso" element={<ProgressPage />} />
+
+          {/* Citas Médicas */}
+          <Route path="citas" element={<BookAppointmentPage />} />
+
+          {/* Biblioteca */}
+          <Route path="biblioteca" element={<LibraryPage />} />
+
+          {/* Asistente (Futuro) */}
+          <Route path="asistente" element={<div className="p-10 text-center text-slate-500">🤖 Chat con IA (Próximamente)</div>} />
+          
         </Route>
+
+        {/* === RUTA 404 (Cualquier otra cosa va al login) === */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
 
       </Routes>
     </BrowserRouter>
