@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Base de datos PostgreSQL para el Auth-Service
+  # 1. Base de datos PostgreSQL (Auth, Profiles, Appointments)
   postgres-db:
     image: postgres:16-alpine
     container_name: uce_postgres
@@ -13,6 +13,62 @@ services:
       - "5432:5432"
     networks:
       - wellness-net
+
+  # 2. Base de datos MongoDB (Assessments)
+  mongo:
+    image: mongo:6.0
+    container_name: uce_mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: securepassword
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - wellness-net
+
+  # 3. RabbitMQ (Gestor de Mensajes - Eventos)
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: uce-rabbitmq
+    ports:
+      - "5672:5672"   # Puerto para que los microservicios hablen (AMQP)
+      - "15672:15672" # Puerto para que TÚ veas el panel (HTTP)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - wellness-net
+  # 4. MQTT Broker (Mosquitto) - Para Telemetría en Tiempo Real
+  mosquitto:
+    image: eclipse-mosquitto:1.6
+    container_name: uce_mosquitto
+    ports:
+      - "1883:1883" # Puerto para que los microservicios se conecten
+      - "9001:9001" # Websockets (por si el Frontend conecta directo)
+    volumes:
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - wellness-net
+
+  # 5. Redis (Caché en Memoria RAM) - Requisito: "One must be cache"
+  redis:
+    image: redis:alpine
+    container_name: uce_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - wellness-net
+
+volumes:
+  mongo_data:
+  rabbitmq_data:
+  mosquitto_data: # <--- Nuevo
+  mosquitto_log:  # <--- Nuevo
 
 networks:
   wellness-net:

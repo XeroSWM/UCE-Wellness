@@ -1,9 +1,12 @@
-import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('users')
 export class UserOrmEntity {
-  @PrimaryColumn('uuid')
+  @PrimaryGeneratedColumn('uuid') // <--- ESTO ES VITAL
   id: string;
+
+  @Column({ nullable: true })
+  name: string;
 
   @Column({ unique: true })
   email: string;
@@ -11,7 +14,7 @@ export class UserOrmEntity {
   @Column()
   passwordHash: string;
 
-  @Column()
+  @Column({ default: 'STUDENT' })
   role: string;
 
   @Column({ default: true })

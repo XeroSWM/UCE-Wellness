@@ -1,7 +1,19 @@
-import { UserRole } from '../../../domain/entities/user.entity';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 
 export class RegisterUserDto {
-  email!: string;
-  password!: string;
-  role!: UserRole;
+  @IsString()
+  @IsOptional()
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(6)
+  password: string;
+
+  // 👇 ESTE ES EL CAMPO QUE FALTA Y CAUSA EL ERROR ROJO
+  @IsString()
+  @IsOptional()
+  role?: string; 
 }

@@ -1,25 +1,40 @@
-import { randomUUID } from 'crypto';
-import * as bcrypt from 'bcrypt'; // <--- 1. Importamos bcrypt
+import { Injectable, Inject, ConflictException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { User } from '../../domain/entities/user.entity';
-import { IUserRepository } from '../ports/user-repository.interface';
+import { UserRepository } from '../ports/user-repository.interface';
+// Importamos el DTO correcto que acabamos de definir arriba
+import { RegisterUserDto } from '../../infrastructure/controllers/dtos/register-user.dto';
 
+@Injectable()
 export class RegisterUserUseCase {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    @Inject('UserRepository') 
+    private readonly userRepository: UserRepository
+  ) {}
 
-  async execute(email: string, password: string, role: 'STUDENT' | 'SPECIALIST' | 'ADMIN') {
+  async execute(registerUserDto: RegisterUserDto): Promise<User> {
+    // 1. Verificar si el usuario ya existe
+    const existingUser = await this.userRepository.findByEmail(registerUserDto.email);
     
-    // 2. ENCRIPTACIÓN: Convertimos "Hola123" en "$2b$10$EixZa..."
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+    if (existingUser) {
+      throw new ConflictException('El correo ya está registrado');
+    }
 
-    // 3. Creamos el usuario usando el HASH, no la contraseña original
+    // 2. Encriptar contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(registerUserDto.password, salt);
+
+    // 3. Crear la entidad de Usuario (Dominio)
     const newUser = new User(
-      randomUUID(), 
-      email,
-      passwordHash, // <--- Aquí va el hash seguro
-      role
+      null, // ID (se genera en base de datos)
+      registerUserDto.name || 'Usuario Sin Nombre', // Manejo de nombre opcional
+      registerUserDto.email,
+      hash,
+      (registerUserDto as any).role || 'STUDENT',
+      true // isActive
     );
 
-    return await this.userRepository.save(newUser);
+    // 4. Guardar en Base de Datos
+    return this.userRepository.save(newUser);
   }
 }
