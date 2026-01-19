@@ -1,29 +1,42 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
-import { AssessmentService } from '../../application/assessment.service'; // Ajusta la ruta si es necesario
+import { Controller, Get, Post, Body, Param, NotFoundException } from '@nestjs/common';
+import { AssessmentService } from '../../application/assessment.service';
 
-@Controller('assessments') // Ruta base: http://localhost:3002/api/assessments
+@Controller('assessments')
 export class AssessmentController {
   constructor(private readonly assessmentService: AssessmentService) {}
 
+  // 1. Obtener todos
   @Get()
   findAll() {
     return this.assessmentService.findAll();
   }
 
+  // 2. Crear (Seed)
   @Post()
   create(@Body() body: any) {
     return this.assessmentService.create(body);
   }
 
-  // === AQUÍ ESTÁ LA RUTA QUE FALTABA ===
+  // 3. Guardar Resultados
   @Post('results')
-  async saveResult(@Body() body: any) {
-    console.log('✅ Recibiendo resultado:', body);
+  saveResult(@Body() body: any) {
     return this.assessmentService.saveResult(body);
   }
 
+  // 4. Historial
   @Get('history/:userId')
-  async getHistory(@Param('userId') userId: string) {
+  getHistory(@Param('userId') userId: string) {
     return this.assessmentService.getHistory(userId);
+  }
+
+  // === 5. ESTA ES LA RUTA QUE TE FALTA ===
+  // Sin esto, el frontend recibe un error 404
+  @Get(':id')
+  async getOne(@Param('id') id: string) {
+    const assessment = await this.assessmentService.findOne(id);
+    if (!assessment) {
+      throw new NotFoundException(`Test no encontrado: ${id}`);
+    }
+    return assessment;
   }
 }

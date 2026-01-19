@@ -5,22 +5,26 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  // Endpoint para agendar: POST /api/appointments
+  // 1. AGENDAR CITA (POST /api/appointments)
   @Post()
   create(@Body() body: any) {
-    console.log('📅 Nueva solicitud de cita:', body);
+    console.log('📅 Nueva solicitud de cita recibida:', body);
     return this.appService.create(body);
   }
 
-  // Endpoint historial estudiante: GET /api/appointments/student/:id
-  @Get('student/:id')
-  findByStudent(@Param('id') id: string) {
-    return this.appService.findByStudent(id);
-  }
-
-  // Endpoint ver todo: GET /api/appointments
+  // 2. VER TODAS (GET /api/appointments)
   @Get()
   findAll() {
     return this.appService.findAll();
   }
+
+  // 3. BUSCAR POR ESTUDIANTE (GET /api/appointments/student/:id)
+  // Este lo usa tu nuevo Dashboard de Estudiante
+  @Get('student/:id')
+  findByStudent(@Param('id') id: string) {
+    console.log(`🔎 Buscando citas del estudiante: ${id}`);
+    return this.appService.findByStudent(id);
+  }
+
+  
 }
