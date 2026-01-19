@@ -4,7 +4,10 @@ import axios from 'axios';
 import { ArrowRight, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function TakingAssessmentPage() {
-  const { type } = useParams(); // Recibe 'estres' o 'beck' desde la URL
+  // 1. CORRECCIÓN CRÍTICA: Usamos 'id' porque en App.tsx definiste la ruta como "evaluacion/:id"
+  // Si usas 'type', llegará como undefined.
+  const { id } = useParams<{ id: string }>(); 
+  
   const navigate = useNavigate();
   
   // Estados para manejar la lógica del test
@@ -15,106 +18,92 @@ export default function TakingAssessmentPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // 1. CARGAR EL TEST DESDE EL BACKEND
+  // 2. CARGAR EL TEST (Lógica simplificada usando el nuevo endpoint del Backend)
   useEffect(() => {
     const fetchAssessment = async () => {
+      // Validación de seguridad
+      if (!id) return;
+
       try {
-        console.log("Iniciando búsqueda de test tipo:", type);
+        console.log("🔍 Buscando test con ID/Tipo:", id);
         
-        // Petición al microservicio de Evaluaciones
-        const response = await axios.get('http://localhost:3002/api/assessments');
-        const allAssessments = response.data;
+        // PETICIÓN DIRECTA AL ENDPOINT ESPECÍFICO QUE CREAMOS
+        // Nota: Asegúrate de que el puerto (3002 o 3006) coincida con tu consola negra
+        const response = await axios.get(`http://localhost:3002/api/assessments/${id}`);
         
-        // Lógica para encontrar el test correcto según el parámetro de la URL
-        let found = null;
-
-        if (type === 'estres') {
-          found = allAssessments.find((a: any) => 
-            a.title.toLowerCase().includes('estrés') || 
-            a.title.toLowerCase().includes('estres') ||
-            a.title.includes('PSS')
-          );
-        } else if (type === 'beck') {
-          found = allAssessments.find((a: any) => 
-            a.title.toLowerCase().includes('beck') || 
-            a.title.toLowerCase().includes('depresión')
-          );
-        }
-
-        if (found) {
-          console.log("✅ Test encontrado:", found.title);
-          setAssessment(found);
-        } else {
-          console.warn("❌ No se encontró ningún test compatible con:", type);
-          setErrorMsg(`No se encontró el test de tipo "${type}" en la base de datos.`);
+        if (response.data) {
+          console.log("✅ Test cargado:", response.data.title);
+          setAssessment(response.data);
         }
         
       } catch (error: any) {
-        console.error("Error de conexión:", error);
-        setErrorMsg("Error al conectar con el servidor (Assessment-Service). Revisa que esté prendido en el puerto 3002.");
+        console.error("❌ Error cargando test:", error);
+        
+        // Mensajes de error amigables
+        if (error.response && error.response.status === 404) {
+          setErrorMsg(`El test "${id}" no existe en la base de datos.`);
+        } else {
+          setErrorMsg("Error de conexión con el Assessment-Service. Revisa la consola.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchAssessment();
-  }, [type]);
+  }, [id]);
 
-  // 2. MANEJAR LA SELECCIÓN DE UNA OPCIÓN
+  // 3. MANEJAR LA SELECCIÓN DE UNA OPCIÓN
   const handleSelectOption = (value: number) => {
     setAnswers(prev => ({
       ...prev,
       [currentQuestion]: value
     }));
     
-    // Auto-avanzar a la siguiente pregunta después de un breve momento
-    if (currentQuestion < (assessment?.questions.length || 0) - 1) {
+    // Auto-avanzar a la siguiente pregunta
+    if (assessment && currentQuestion < assessment.questions.length - 1) {
       setTimeout(() => setCurrentQuestion(curr => curr + 1), 250);
     }
   };
 
-  // 3. ENVIAR RESULTADOS AL FINALIZAR
+  // 4. ENVIAR RESULTADOS
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      // Calcular puntaje total sumando las respuestas
       const totalScore = Object.values(answers).reduce((a, b) => a + b, 0);
       
-      // Obtener usuario del localStorage (para saber de quién es el resultado)
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
-      // Fallback por si estás probando sin login: usa un ID genérico
-      const userId = user?.id || user?._id || 'usuario_prueba_sin_login'; 
+      const userId = user?.id || user?._id || 'anonimo'; 
 
       const payload = {
         userId: userId,
         assessmentTitle: assessment.title,
+        assessmentType: id, // Guardamos qué tipo de test fue (ej: 'beck')
         totalScore: totalScore,
-        maxScore: assessment.questions.length * 3, // Estimado (depende del test, Beck es 3, PSS es 4)
+        maxScore: assessment.questions.length * 3, 
         answers: answers
       };
 
-      console.log("Enviando payload:", payload);
+      console.log("📤 Enviando resultados:", payload);
 
-      // ENVIAR AL BACKEND (Endpoint que creamos recién)
       await axios.post('http://localhost:3002/api/assessments/results', payload);
 
-      alert(`¡Evaluación Guardada con Éxito!\n\nTu puntaje obtenido es: ${totalScore}`);
-      
-      // Redirigir a la página de progreso para ver el historial actualizado
+      alert(`¡Evaluación Guardada!\nPuntaje: ${totalScore}`);
       navigate('/student/progreso'); 
 
     } catch (error) {
-      console.error("Error enviando:", error);
-      alert("Error al guardar el resultado. Revisa la consola para más detalles.");
+      console.error("Error guardando:", error);
+      alert("Error al guardar el resultado. Intenta nuevamente.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // --- RENDERIZADO DE ESTADOS DE CARGA Y ERROR ---
+  // --- RENDERIZADO ---
+  
   if (loading) return (
-    <div className="dashboard-container" style={{ textAlign: 'center', marginTop: '50px' }}>
+    <div className="dashboard-container text-center mt-10">
       <p>Cargando evaluación...</p>
     </div>
   );
@@ -124,26 +113,26 @@ export default function TakingAssessmentPage() {
       <div style={{ color: '#dc2626', marginBottom: '20px' }}>
         <AlertCircle size={48} style={{ margin: '0 auto', marginBottom: '10px' }} />
         <h3>Ups, hubo un problema</h3>
-        <p>{errorMsg || "No se encontró la información del test."}</p>
+        <p>{errorMsg || "No se pudo cargar el test."}</p>
+        <p style={{ fontSize: '0.8rem', color: '#666' }}>ID Buscado: {id || 'undefined'}</p>
       </div>
       <button className="btn-primary" style={{ width: 'auto', margin: '0 auto' }} onClick={() => navigate('/student/evaluaciones')}>
-        Volver a intentar
+        Volver al menú
       </button>
     </div>
   );
 
-  // Variables para la vista actual
   const question = assessment.questions[currentQuestion];
   const progress = ((currentQuestion + 1) / assessment.questions.length) * 100;
 
   return (
-    <div className="dashboard-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div className="dashboard-container animate-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
       
-      {/* BARRA DE PROGRESO SUPERIOR */}
+      {/* HEADER Y PROGRESO */}
       <div style={{ marginBottom: '30px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>
           <span style={{ fontWeight: 'bold', color: '#0f2a4a' }}>{assessment.title}</span>
-          <span>Pregunta {currentQuestion + 1} de {assessment.questions.length}</span>
+          <span>{currentQuestion + 1} / {assessment.questions.length}</span>
         </div>
         <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
           <div style={{ width: `${progress}%`, background: '#2563eb', height: '100%', transition: 'width 0.3s ease' }} />
@@ -151,19 +140,11 @@ export default function TakingAssessmentPage() {
       </div>
 
       {/* TARJETA DE PREGUNTA */}
-      <div className="card" style={{ minHeight: '400px', padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <h2 style={{ 
-          fontSize: '1.5rem', 
-          color: '#1e293b', 
-          marginBottom: '30px', 
-          textAlign: 'center', 
-          fontWeight: '600',
-          lineHeight: '1.4' 
-        }}>
+      <div className="card" style={{ minHeight: '300px', padding: '40px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <h2 style={{ fontSize: '1.4rem', color: '#1e293b', marginBottom: '30px', textAlign: 'center', fontWeight: '600' }}>
           {question.text}
         </h2>
 
-        {/* Lista de Opciones */}
         <div style={{ display: 'grid', gap: '12px' }}>
           {question.options.map((opt: any, idx: number) => {
             const isSelected = answers[currentQuestion] === opt.value;
@@ -183,8 +164,7 @@ export default function TakingAssessmentPage() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  transition: 'all 0.2s ease',
-                  boxShadow: isSelected ? '0 4px 6px -1px rgba(37, 99, 235, 0.1)' : 'none'
+                  transition: 'all 0.2s ease'
                 }}
               >
                 {opt.label}
@@ -195,9 +175,8 @@ export default function TakingAssessmentPage() {
         </div>
       </div>
 
-      {/* BOTONES DE NAVEGACIÓN */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px', alignItems: 'center' }}>
-        {/* Botón Anterior */}
+      {/* NAVEGACIÓN */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
         <button 
           onClick={() => setCurrentQuestion(c => Math.max(0, c - 1))}
           disabled={currentQuestion === 0}
@@ -205,31 +184,28 @@ export default function TakingAssessmentPage() {
             display: 'flex', alignItems: 'center', gap: '8px', 
             background: 'none', border: 'none', 
             color: currentQuestion === 0 ? '#cbd5e1' : '#64748b', 
-            cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer', 
-            fontWeight: '600'
+            cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer'
           }}
         >
           <ArrowLeft size={20} /> Anterior
         </button>
 
-        {/* Botón Siguiente o Finalizar */}
         {currentQuestion === assessment.questions.length - 1 ? (
           <button 
             className="btn-primary" 
             onClick={handleSubmit}
             disabled={submitting}
-            style={{ width: 'auto', padding: '12px 30px', background: '#16a34a', color: 'white' }}
+            style={{ width: 'auto', padding: '12px 30px', background: '#16a34a' }}
           >
-            {submitting ? 'Guardando...' : 'Finalizar Test'}
+            {submitting ? 'Guardando...' : 'Finalizar'}
           </button>
         ) : (
           <button 
-            onClick={() => setCurrentQuestion(c => Math.min(assessment.questions.length - 1, c + 1))}
+            onClick={() => setCurrentQuestion(c => c + 1)}
             style={{ 
               display: 'flex', alignItems: 'center', gap: '8px', 
               background: '#0f2a4a', color: 'white', border: 'none', 
-              padding: '12px 24px', borderRadius: '8px', cursor: 'pointer',
-              fontWeight: '600', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+              padding: '10px 20px', borderRadius: '8px', cursor: 'pointer'
             }}
           >
             Siguiente <ArrowRight size={20} />

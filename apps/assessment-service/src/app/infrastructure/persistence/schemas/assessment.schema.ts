@@ -3,34 +3,22 @@ import { HydratedDocument } from 'mongoose';
 
 export type AssessmentDocument = HydratedDocument<Assessment>;
 
-@Schema()
-class Question {
-  @Prop({ required: true }) 
-  text: string;
-
-  @Prop([{ 
-    label: { type: String, required: true }, 
-    value: { type: Number, required: true } 
-  }])
-  options: { label: string; value: number }[];
-
-  @Prop() 
-  weight: number;
-}
-
 @Schema({ collection: 'assessments', timestamps: true })
 export class Assessment {
-  @Prop({ required: true })
-  title: string;
+  
+  // === AGREGA ESTA LÍNEA ===
+  // Es la etiqueta que usaremos en la URL (ej: 'beck', 'estres')
+  @Prop({ required: true, unique: true }) 
+  type: string; 
+  // ==========================
 
-  @Prop()
-  description: string;
-
-  @Prop([Question]) // Aquí guardamos el array de preguntas
-  questions: Question[];
-
-  @Prop({ default: true })
-  isActive: boolean;
+  @Prop() title: string;
+  @Prop() description: string;
+  @Prop() category: string;
+  
+  // ... resto de tus campos (questions, etc.) ...
+  @Prop({ type: [Object] }) 
+  questions: any[];
 }
 
 export const AssessmentSchema = SchemaFactory.createForClass(Assessment);
