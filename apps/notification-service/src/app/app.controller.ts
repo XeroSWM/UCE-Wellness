@@ -1,12 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
 
-@Controller()
+@Controller('notifications')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getData() {
-    return this.appService.getData();
+  // ELIMINAMOS EL MÉTODO @Get() QUE DABA ERROR
+
+  @Post('email')
+  async sendEmail(@Body() body: any) {
+    return this.appService.sendEmail(body);
   }
 }

@@ -22,7 +22,7 @@ async function bootstrap() {
 
   await app.startAllMicroservices();
   
-  const port = process.env.PORT || 3004;
+  const port = process.env.PORT || 3005;
   await app.listen(port);
   
   Logger.log(
