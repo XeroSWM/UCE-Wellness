@@ -1,190 +1,180 @@
-import { useState } from 'react';
-import { BookOpen, Video, FileText, Search, ExternalLink, PlayCircle, Download } from 'lucide-react';
-
-// --- BASE DE DATOS LOCAL DE RECURSOS ---
-// Aquí "curamos" el contenido manualmente para asegurar calidad.
-const RESOURCES = [
-  {
-    id: 1,
-    title: "En tiempos de estrés, haz lo que importa",
-    description: "Guía ilustrada de la OMS para manejar situaciones difíciles.",
-    type: "PDF",
-    category: "Estrés",
-    url: "https://iris.who.int/bitstream/handle/10665/336218/9789240009591-spa.pdf",
-    thumbnail: "https://via.placeholder.com/150/e0f2fe/0f2a4a?text=Guia+OMS"
-  },
-  {
-    id: 2,
-    title: "Meditación Guiada: Relajación Muscular",
-    description: "Técnica de Jacobson para reducir la tensión física en 10 minutos.",
-    type: "VIDEO",
-    category: "Relajación",
-    url: "https://www.youtube.com/watch?v=1s97t6b7p2E", // Link de ejemplo
-    thumbnail: "https://via.placeholder.com/150/fef3c7/b45309?text=Video+Relax"
-  },
-  {
-    id: 3,
-    title: "Ansiedad ante los Exámenes",
-    description: "Estrategias prácticas para afrontar el bloqueo académico.",
-    type: "PDF",
-    category: "Académico",
-    url: "https://clinica.ucm.es/data/cont/media/www/pag-13437/Ansiedad%20ante%20los%20ex%C3%A1menes.pdf",
-    thumbnail: "https://via.placeholder.com/150/dbeafe/1e40af?text=Examenes"
-  },
-  {
-    id: 4,
-    title: "Hablemos de Depresión",
-    description: "Folleto informativo de la OPS para identificar síntomas.",
-    type: "WEB",
-    category: "Depresión",
-    url: "https://www.paho.org/es/temas/depresion",
-    thumbnail: "https://via.placeholder.com/150/fee2e2/991b1b?text=Info+OPS"
-  },
-  {
-    id: 5,
-    title: "Kit de Primeros Auxilios Emocionales",
-    description: "Herramientas rápidas para momentos de crisis.",
-    type: "PDF",
-    category: "Crisis",
-    url: "https://www.cruzroja.es/prevencion/codigos/14023000/docs/guia_primeros_auxilios_psicologicos.pdf",
-    thumbnail: "https://via.placeholder.com/150/f3e8ff/6b21a8?text=Primeros+Aux"
-  }
-];
+import { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import { BookOpen, Video, Music, FileText, Search, Filter, ExternalLink, Sparkles, Plus, X, UploadCloud } from 'lucide-react';
 
 export default function LibraryPage() {
+  const [resources, setResources] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('Todos');
+  
+  // Estados para el Modal de Subida
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Lógica de Filtrado
-  const filteredResources = RESOURCES.filter(r => {
-    const matchesSearch = r.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          r.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filter === 'Todos' || r.category === filter;
-    return matchesSearch && matchesFilter;
-  });
+  // Estados del Formulario
+  const [newTitle, setNewTitle] = useState('');
+  const [newCategory, setNewCategory] = useState('General');
 
-  const categories = ['Todos', 'Estrés', 'Depresión', 'Relajación', 'Académico', 'Crisis'];
+  // --- 1. Cargar Recursos ---
+  const fetchResources = async () => {
+    try {
+      setLoading(true);
+      // Ajusta el puerto: 3007 (Directo) o 3333 (Gateway)
+      const response = await axios.get('http://localhost:3007/api/resources'); 
+      setResources(response.data);
+    } catch (error) {
+      console.error("Error cargando biblioteca:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Función para obtener icono según tipo
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'PDF': return <FileText size={16} />;
-      case 'VIDEO': return <Video size={16} />;
-      case 'WEB': return <BookOpen size={16} />;
-      default: return <ExternalLink size={16} />;
+  useEffect(() => {
+    fetchResources();
+  }, []);
+
+  // --- 2. Función para Subir Archivo ---
+  const handleUpload = async (e: any) => {
+    e.preventDefault();
+    if (!fileInputRef.current?.files?.[0]) return alert("Selecciona un archivo");
+
+    const file = fileInputRef.current.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', newTitle);
+    formData.append('category', newCategory);
+
+    try {
+      setUploading(true);
+      // POST al Backend
+      await axios.post('http://localhost:3007/api/resources', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      // Cerrar y Recargar
+      alert("¡Recurso subido con éxito!");
+      setIsModalOpen(false);
+      setNewTitle('');
+      fetchResources(); // Recargar lista (Redis se habrá limpiado)
+
+    } catch (error) {
+      console.error("Error subiendo:", error);
+      alert("Error al subir el archivo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // --- Filtros y Estilos ---
+  const filteredResources = resources.filter(r => 
+    r.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getResourceTheme = (type: string) => {
+    switch(type) {
+      case 'VIDEO': return { icon: <Video size={20}/>, color: '#ef4444', bg: '#fef2f2', label: 'Video' };
+      case 'AUDIO': return { icon: <Music size={20}/>, color: '#8b5cf6', bg: '#f5f3ff', label: 'Audio' };
+      default: return { icon: <FileText size={20}/>, color: '#3b82f6', bg: '#eff6ff', label: 'Documento' };
     }
   };
 
   return (
-    <div className="dashboard-container animate-in">
+    <div className="dashboard-container animate-in" style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
       
-      {/* Cabecera */}
-      <div style={{ marginBottom: '30px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2rem', color: '#0f2a4a', fontWeight: 'bold' }}>Biblioteca de Bienestar</h1>
-        <p style={{ color: '#64748b' }}>Recursos seleccionados para tu salud mental y éxito académico.</p>
+      {/* CABECERA */}
+      <div style={{ marginBottom: '40px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '2.5rem', color: '#0f2a4a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 15, marginBottom: '10px' }}>
+          <BookOpen size={36} color="#2563eb"/> Biblioteca de Bienestar
+        </h1>
+        <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Recursos curados para tu éxito.</p>
       </div>
 
-      {/* Barra de Búsqueda y Filtros */}
-      <div className="card" style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        
-        {/* Buscador */}
-        <div style={{ position: 'relative' }}>
-          <Search size={20} color="#94a3b8" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)' }} />
-          <input 
-            type="text" 
-            placeholder="Buscar guías, videos o artículos..." 
-            className="input-field"
-            style={{ paddingLeft: '45px', width: '100%' }}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Tags de Categoría */}
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '20px',
-                border: filter === cat ? '2px solid #2563eb' : '1px solid #e2e8f0',
-                background: filter === cat ? '#2563eb' : 'white',
-                color: filter === cat ? 'white' : '#64748b',
-                cursor: 'pointer',
-                fontWeight: '500',
-                fontSize: '0.9rem',
-                transition: 'all 0.2s'
-              }}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+      {/* BUSCADOR */}
+      <div style={{ background: 'white', padding: '10px 20px', display: 'flex', gap: '15px', marginBottom: '40px', alignItems: 'center', borderRadius: '50px', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.08)', border: '1px solid #f1f5f9', maxWidth: '800px', marginInline: 'auto' }}>
+        <Search color="#64748b" size={20} />
+        <input type="text" placeholder="Buscar..." style={{ border: 'none', outline: 'none', width: '100%', fontSize: '1rem', color: '#334155' }} onChange={(e) => setSearchTerm(e.target.value)} />
       </div>
 
-      {/* Grid de Recursos */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-        {filteredResources.map((resource) => (
-          <div key={resource.id} className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            
-            {/* Thumbnail (Opcional, si no quieres imágenes borra este bloque) */}
-            <div style={{ height: '120px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid #e2e8f0' }}>
-               {/* Usamos iconos grandes si no hay imagen real */}
-               {resource.type === 'VIDEO' ? <PlayCircle size={40} color="#cbd5e1"/> : <BookOpen size={40} color="#cbd5e1"/>}
-            </div>
-
-            <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-              
-              {/* Etiqueta Tipo */}
-              <div style={{ 
-                display: 'inline-flex', alignItems: 'center', gap: 5, 
-                fontSize: '0.75rem', fontWeight: 'bold', 
-                color: resource.type === 'VIDEO' ? '#b45309' : '#1e40af',
-                background: resource.type === 'VIDEO' ? '#fef3c7' : '#dbeafe',
-                padding: '4px 8px', borderRadius: '4px', width: 'fit-content', marginBottom: '10px'
-              }}>
-                {getTypeIcon(resource.type)} {resource.type}
-              </div>
-
-              <h3 style={{ fontSize: '1.1rem', color: '#0f2a4a', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-                {resource.title}
-              </h3>
-              
-              <p style={{ fontSize: '0.9rem', color: '#64748b', margin: '0 0 20px 0', flex: 1 }}>
-                {resource.description}
-              </p>
-
-              <a 
-                href={resource.url} 
-                target="_blank" 
-                rel="noreferrer"
-                className="btn-primary"
-                style={{ 
-                  textDecoration: 'none', 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  gap: '8px',
-                  background: 'white',
-                  color: '#2563eb',
-                  border: '1px solid #2563eb'
-                }}
-              >
-                {resource.type === 'PDF' ? <Download size={18} /> : <ExternalLink size={18} />}
-                {resource.type === 'VIDEO' ? 'Ver Video' : 'Abrir Recurso'}
+      {/* GRID DE RECURSOS */}
+      {loading ? (
+        <div style={{ textAlign: 'center', color: '#64748b' }}>Cargando recursos...</div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '25px' }}>
+          {filteredResources.map((res) => {
+            const theme = getResourceTheme(res.type);
+            return (
+              <a key={res.id} href={res.url} target="_blank" rel="noopener noreferrer" className="resource-card-modern" style={{ textDecoration: 'none' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '20px' }}>
+                  <div style={{ background: theme.bg, color: theme.color, padding: 12, borderRadius: '12px' }}>{theme.icon}</div>
+                  <ExternalLink size={18} color="#cbd5e1" className="external-link-icon"/>
+                </div>
+                <h3 style={{ margin: '0 0 10px 0', color: '#1e293b', fontSize: '1.1rem' }}>{res.title}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{res.category}</span>
+                </div>
               </a>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      {filteredResources.length === 0 && (
-         <div style={{ textAlign: 'center', color: '#94a3b8', marginTop: 40 }}>
-           No se encontraron recursos para "{searchTerm}" en la categoría {filter}.
-         </div>
+            );
+          })}
+        </div>
       )}
 
+      {/* BOTÓN FLOTANTE PARA SUBIR (ADMIN) */}
+      <button 
+        onClick={() => setIsModalOpen(true)}
+        style={{ position: 'fixed', bottom: '40px', right: '40px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 25px rgba(37, 99, 235, 0.4)', cursor: 'pointer', zIndex: 100 }}
+      >
+        <Plus size={30} />
+      </button>
+
+      {/* MODAL DE SUBIDA */}
+      {isModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: 'white', padding: '30px', borderRadius: '20px', width: '400px', position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
+            <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: 15, right: 15, background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+            
+            <h2 style={{ marginTop: 0, color: '#0f2a4a' }}>Subir Nuevo Recurso</h2>
+            
+            <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 5, fontSize: '0.9rem', color: '#64748b' }}>Título</label>
+                <input required type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }} placeholder="Ej: Guía de Sueño" />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: 5, fontSize: '0.9rem', color: '#64748b' }}>Categoría</label>
+                <select value={newCategory} onChange={e => setNewCategory(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <option>General</option>
+                  <option>Salud Mental</option>
+                  <option>Académico</option>
+                  <option>Mindfulness</option>
+                </select>
+              </div>
+              
+              <div style={{ border: '2px dashed #cbd5e1', padding: '20px', borderRadius: '10px', textAlign: 'center', cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
+                <UploadCloud size={30} color="#64748b" />
+                <p style={{ margin: '10px 0 0', fontSize: '0.9rem', color: '#64748b' }}>Click para seleccionar archivo</p>
+                <input ref={fileInputRef} type="file" style={{ display: 'none' }} accept=".pdf,.mp4,.mp3,.jpg,.png" />
+              </div>
+
+              <button disabled={uploading} type="submit" style={{ background: '#2563eb', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: uploading ? 'not-allowed' : 'pointer', marginTop: '10px' }}>
+                {uploading ? 'Subiendo...' : 'Publicar Recurso'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .resource-card-modern {
+          background: white; padding: 25px; border-radius: 20px; border: 1px solid #f1f5f9;
+          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.3s ease; cursor: pointer; display: block;
+        }
+        .resource-card-modern:hover {
+          transform: translateY(-7px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.08); border-color: #e2e8f0;
+        }
+        .resource-card-modern:hover .external-link-icon { color: #3b82f6 !important; }
+      `}</style>
     </div>
   );
 }

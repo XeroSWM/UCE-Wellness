@@ -1,17 +1,36 @@
-import { Controller, Get, UseInterceptors } from '@nestjs/common';
-import { CacheInterceptor } from '@nestjs/cache-manager';
+import { Controller, Get, Post, UseInterceptors, UploadedFile, Body } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { AppService } from './app.service';
 
-@Controller('resources')
-@UseInterceptors(CacheInterceptor) // <--- ¡ESTO ACTIVA REDIS!
+@Controller('resources') // Ruta: /api/resources
 export class AppController {
+  constructor(private readonly appService: AppService) {}
+
   @Get()
-  findAll() {
-    console.log('🐌 Consultando a la base de datos (Lento)...'); 
-    // Si ves este log, es que NO usó caché. Si NO lo ves, ¡Redis respondió!
-    
-    return [
-      { id: 1, title: 'Guía Anti-Estrés', type: 'PDF', url: '/files/stress.pdf' },
-      { id: 2, title: 'Meditación', type: 'VIDEO', url: '/files/meditacion.mp4' }
-    ];
+  getData() {
+    return this.appService.getResources();
+  }
+
+  // SUBIDA DE ARCHIVOS
+  @Post()
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: './uploads', // Se guardan en la carpeta uploads de la raíz
+      filename: (req, file, callback) => {
+        // Generar nombre único: recurso-848392.pdf
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = extname(file.originalname);
+        callback(null, `recurso-${uniqueSuffix}${ext}`);
+      },
+    }),
+  }))
+  createResource(
+    @UploadedFile() file: Express.Multer.File, 
+    @Body() body: any
+  ) {
+    // Si no se sube archivo, file será undefined, manéjalo si deseas
+    return this.appService.addResource(file, body);
   }
 }

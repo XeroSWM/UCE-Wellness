@@ -1,25 +1,30 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-redis-yet';
+import * as redisStore from 'cache-manager-redis-store';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
-    // Configuración de Redis
-    CacheModule.registerAsync({
-      useFactory: async () => ({
-        store: await redisStore({
-          socket: {
-            host: 'localhost',
-            port: 6379,
-          },
-          ttl: 10 * 1000, // Los datos viven 10 segundos en memoria
-        }),
-      }),
+    // 1. Redis Cache
+    CacheModule.register({
       isGlobal: true,
+      store: redisStore,
+      host: 'localhost',
+      port: 6379,
+      ttl: 600, // 10 minutos de memoria
+    }),
+
+    // 2. Servir Archivos Estáticos (PDFs, Imágenes)
+    // Ruta pública: http://localhost:3007/uploads/archivo.pdf
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', '..', 'uploads'), // Sube 3 niveles hasta la raíz del workspace
+      serveRoot: '/uploads', 
     }),
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [AppService],
 })
 export class AppModule {}
