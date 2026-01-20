@@ -1,33 +1,26 @@
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {
+  // 1. Crear la aplicación
   const app = await NestFactory.create(AppModule);
-  const globalPrefix = 'api';
-  app.setGlobalPrefix(globalPrefix);
 
-  // Conectar a RabbitMQ
+  // 2. Conectar el Microservicio (RabbitMQ)
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
-      urls: ['amqp://guest:guest@localhost:5672'],
-      queue: 'notifications_queue',
+      urls: ['amqp://guest:guest@localhost:5672'], // Tu url de Rabbit
+      queue: 'notifications_queue', // ¡IMPORTANTE! La misma cola que pusiste en appointment
       queueOptions: {
         durable: false
       },
     },
   });
 
+  // 3. Iniciar servicios híbridos (HTTP + RabbitMQ)
   await app.startAllMicroservices();
-  
-  const port = process.env.PORT || 3005;
-  await app.listen(port);
-  
-  Logger.log(
-    `🚀 Notification Service is listening on HTTP:${port} and RabbitMQ Queue`
-  );
+  await app.listen(3005);
+  console.log(`🚀 Notification Service escuchando en puerto 3005 y RabbitMQ`);
 }
-
 bootstrap();

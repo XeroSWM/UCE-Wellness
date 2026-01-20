@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { NotificationController } from './infrastructure/controllers/notification.controller';
-import { NotificationService } from './application/notification.service';
+import { HttpModule } from '@nestjs/axios';
+import { AppController } from './app.controller'; // <--- Verifica que esta ruta sea "./app.controller"
+import { AppService } from './app.service';
 
 @Module({
-  imports: [],
-  controllers: [NotificationController],
-  providers: [NotificationService],
+  imports: [HttpModule],
+  controllers: [AppController], // <--- ¡TIENE QUE ESTAR AQUÍ!
+  providers: [AppService],
 })
 export class AppModule {}
