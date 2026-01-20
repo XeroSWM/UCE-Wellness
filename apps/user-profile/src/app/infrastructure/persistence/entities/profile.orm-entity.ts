@@ -5,18 +5,28 @@ export class ProfileOrmEntity {
   @PrimaryColumn('uuid')
   id: string;
 
-  @Column({ unique: true }) // Un usuario solo puede tener un perfil
-  userId: string;
+  @Column({ unique: true })
+  userId: string; // El ID que viene del Login
 
   @Column()
-  firstName: string;
+  name: string; // <--- CAMBIO: Solo un campo para "Xavier Monteros"
 
-  @Column()
-  lastName: string;
-
-  @Column()
+  @Column({ nullable: true })
   phoneNumber: string;
 
   @Column({ nullable: true })
   address: string | null;
+
+  // === DATOS ACADÉMICOS ===
+  @Column({ nullable: true })
+  semester: string;
+
+  @Column({ nullable: true })
+  faculty: string;
+
+  @Column({ nullable: true })
+  career: string;
+
+  @Column({ nullable: true })
+  profilePicture: string; 
 }

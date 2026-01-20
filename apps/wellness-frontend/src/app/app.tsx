@@ -8,10 +8,11 @@ import RegisterPage from '../pages/RegisterPage';
 import StudentLayout from '../pages/student/StudentLayout';
 import Dashboard from '../pages/student/Dashboard';
 import EvaluationsPage from '../pages/student/EvaluationsPage';
-import TakingAssessmentPage from '../pages/student/TakingAssessmentPage'; // Tu nombre de archivo real
-import ProgressPage from '../pages/student/ProgressPage';           // Tu nombre de archivo real
+import TakingAssessmentPage from '../pages/student/TakingAssessmentPage'; 
+import ProgressPage from '../pages/student/ProgressPage';           
 import BookAppointmentPage from '../pages/student/BookAppointmentPage';
 import LibraryPage from '../pages/student/LibraryPage';
+import ProfilePage from '../pages/student/ProfilePage'; // <--- NUEVA IMPORTACIÓN
 
 function App() {
   return (
@@ -43,6 +44,9 @@ function App() {
 
           {/* Biblioteca */}
           <Route path="biblioteca" element={<LibraryPage />} />
+
+          {/* Perfil de Usuario (NUEVA RUTA) */}
+          <Route path="perfil" element={<ProfilePage />} />
 
           {/* Asistente (Futuro) */}
           <Route path="asistente" element={<div className="p-10 text-center text-slate-500">🤖 Chat con IA (Próximamente)</div>} />
