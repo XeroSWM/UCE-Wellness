@@ -1,10 +1,15 @@
 export class Profile {
   constructor(
     public readonly id: string,
-    public readonly userId: string, // Esta es la "llave" que lo une con el Auth-Service
-    public readonly firstName: string,
-    public readonly lastName: string,
+    public readonly userId: string,
+    public readonly name: string, // <--- CAMBIO: Name completo
     public readonly phoneNumber: string,
-    public readonly address: string | null
+    public readonly address: string | null,
+    
+    // Nuevos campos
+    public readonly semester: string | null,
+    public readonly faculty: string | null,
+    public readonly career: string | null,
+    public readonly profilePicture: string | null
   ) {}
 }

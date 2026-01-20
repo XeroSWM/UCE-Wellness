@@ -1,10 +1,34 @@
-import { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ClipboardList, Calendar, Bot, BookOpen, BarChart2, LogOut, Menu, X, AlertTriangle } from 'lucide-react';
 
 export default function StudentLayout() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Estado para el nombre, por defecto "Xavier Monteros"
+  const [displayName, setDisplayName] = useState("Xavier Monteros");
+  
+  // === CORRECCIÓN DE ERRORES DE LINTING AQUÍ ===
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed.name) setDisplayName(parsed.name);
+      } catch (error) {
+        // Ahora usamos 'error' y no dejamos el bloque vacío
+        console.error("Error al leer datos del usuario:", error);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   const navItems = [
     { path: '/student/dashboard', label: 'Inicio', icon: <Home size={20} /> },
@@ -50,7 +74,10 @@ export default function StudentLayout() {
             BOTÓN DE CRISIS
           </button>
 
-          <button style={{ background: 'none', border: 'none', color: '#bfdbfe', display: 'flex', gap: '10px', cursor: 'pointer', padding: '10px', width: '100%', alignItems: 'center' }}>
+          <button 
+            onClick={handleLogout}
+            style={{ background: 'none', border: 'none', color: '#bfdbfe', display: 'flex', gap: '10px', cursor: 'pointer', padding: '10px', width: '100%', alignItems: 'center' }}
+          >
             <LogOut size={18} />
             <span>Cerrar Sesión</span>
           </button>
@@ -60,19 +87,26 @@ export default function StudentLayout() {
       {/* Contenido Principal */}
       <div className="main-content">
         <header className="top-header">
-          {/* Botón Menú (Solo visible en Móvil) */}
           <button onClick={() => setIsMobileOpen(true)} className="menu-btn">
              <Menu size={24} color="#333"/> 
              <span style={{ fontWeight: 'bold', color: '#0f2a4a' }}>Menú</span>
           </button>
           
-          {/* Info Usuario */}
-          <div className="user-info">
+          {/* Info de Usuario Clickeable */}
+          <div 
+            className="user-info" 
+            onClick={() => navigate('/student/perfil')} 
+            style={{ cursor: 'pointer' }}
+          >
             <div style={{ textAlign: 'right', marginRight: '10px' }} className="hidden-mobile">
-              <p style={{ fontWeight: 'bold', color: '#334155', margin: 0, fontSize: '0.9rem' }}>Xavier Monteros</p>
-              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>8vo Semestre • 002</p>
+              <p style={{ fontWeight: 'bold', color: '#334155', margin: 0, fontSize: '0.9rem' }}>
+                {displayName}
+              </p>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0 }}>Estudiante UCE</p>
             </div>
-            <div className="avatar">XM</div>
+            <div className="avatar">
+                {displayName.charAt(0).toUpperCase()}
+            </div>
           </div>
         </header>
 
@@ -81,7 +115,6 @@ export default function StudentLayout() {
         </main>
       </div>
       
-      {/* Overlay Móvil */}
       {isMobileOpen && (
         <div 
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40 }} 

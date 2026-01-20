@@ -2,7 +2,7 @@ import { Controller, Post, Body, Inject, Get, Param } from '@nestjs/common';
 import { CreateProfileUseCase } from '../../application/use-cases/create-profile.use-case';
 import { IProfileRepository } from '../../application/ports/profile-repository.interface';
 
-@Controller('profiles') // Ruta: http://localhost:3001/api/profiles
+@Controller('profiles') 
 export class ProfileController {
   private createProfileUseCase: CreateProfileUseCase;
 
@@ -14,8 +14,10 @@ export class ProfileController {
 
   @Post()
   async create(@Body() body: any) {
-    const { userId, firstName, lastName, phoneNumber, address } = body;
-    return await this.createProfileUseCase.execute(userId, firstName, lastName, phoneNumber, address);
+    // El frontend enviará: { userId: "...", name: "Xavier...", semester: "...", etc }
+    const { userId, ...profileData } = body;
+    
+    return await this.createProfileUseCase.execute(userId, profileData);
   }
 
   @Get(':userId')

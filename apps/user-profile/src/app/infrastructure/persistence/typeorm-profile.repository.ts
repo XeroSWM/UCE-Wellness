@@ -19,13 +19,18 @@ export class TypeOrmProfileRepository implements IProfileRepository {
   async findByUserId(userId: string): Promise<Profile | null> {
     const ormProfile = await this.ormRepository.findOne({ where: { userId } });
     if (!ormProfile) return null;
+
+    // Mapeamos el "name" directo
     return new Profile(
       ormProfile.id,
       ormProfile.userId,
-      ormProfile.firstName,
-      ormProfile.lastName,
+      ormProfile.name, // <--- CAMBIO
       ormProfile.phoneNumber,
-      ormProfile.address
+      ormProfile.address,
+      ormProfile.semester,
+      ormProfile.faculty,
+      ormProfile.career,
+      ormProfile.profilePicture
     );
   }
 }

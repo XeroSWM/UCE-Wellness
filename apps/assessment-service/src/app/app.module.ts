@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ClientsModule, Transport } from '@nestjs/microservices'; // <--- 1. IMPORTAR ESTO
 
-// Importaciones de tus Esquemas (Asegúrate que las rutas coincidan con tu estructura)
+// Importaciones de tus Esquemas
 import { Assessment, AssessmentSchema } from './infrastructure/persistence/schemas/assessment.schema';
 import { AssessmentResult, AssessmentResultSchema } from './infrastructure/persistence/schemas/result.schema';
 
@@ -18,11 +19,23 @@ import { AssessmentService } from './application/assessment.service';
     
     // 2. REGISTRO DE MODELOS (Colecciones en la BD)
     MongooseModule.forFeature([
-      // Colección de preguntas
       { name: Assessment.name, schema: AssessmentSchema },
-      
-      // Colección de resultados (NUEVO - Para el historial)
       { name: AssessmentResult.name, schema: AssessmentResultSchema }
+    ]),
+
+    // 3. CONEXIÓN A RABBITMQ (NUEVO - Para enviar alertas)
+    ClientsModule.register([
+      {
+        name: 'NOTIFICATIONS_SERVICE', // Nombre exacto que usamos en el @Inject del Service
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://guest:guest@localhost:5672'], // Tu URL de RabbitMQ
+          queue: 'notifications_queue', // La misma cola que escucha el servicio de notificaciones
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
     ]),
   ],
   controllers: [AssessmentController],
