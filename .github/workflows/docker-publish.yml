@@ -1,0 +1,70 @@
+name: 🚀 Master CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # === BACKENDS ===
+          - service: analytics-engine
+            image: uce-analytics-engine
+            
+          - service: api-gateway
+            image: uce-api-gateway
+            
+          - service: appointment-service
+            image: uce-appointment-service
+            
+          - service: assessment-service
+            image: uce-assessment-service
+            
+          - service: audit-log
+            image: uce-audit-log
+            
+          - service: auth-service
+            image: uce-auth-service
+            
+          - service: notification-service
+            image: uce-notification-service
+            
+          - service: resource-library
+            image: uce-resource-library
+            
+          - service: support-chat
+            image: uce-support-chat
+            
+          - service: user-profile
+            image: uce-user-profile
+            
+          - service: wellness-telemetry
+            image: uce-wellness-telemetry
+
+          # === FRONTEND ===
+          - service: wellness-frontend
+            image: uce-wellness-frontend
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 🛠️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🚀 Build & Push ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: xxavyx38/${{ matrix.image }}:latest
