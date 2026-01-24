@@ -8,7 +8,7 @@ async function bootstrap() {
   // Habilitar CORS para que el Frontend pueda conectarse al socket
   app.enableCors();
 
-  const port = process.env.PORT || 3005;
+  const port = process.env.PORT || 3009;
   await app.listen(port);
   
   Logger.log(
