@@ -12,23 +12,16 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // --- CONFIGURACIÓN DE LA URL DEL BACKEND ---
-  // ❌ ANTES (Solo funcionaba en tu PC):
-  // const API_URL = 'http://localhost:3333';
-  
-  // ✅ AHORA (Funciona en la nube AWS para todo el mundo):
-  const API_URL = 'http://uce-wellness-alb-606640634.us-east-1.elb.amazonaws.com';
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      console.log("Enviando datos a AWS:", { name, email, password, role });
+      console.log("Enviando datos:", { name, email, password, role });
 
       // Enviamos el ROL junto con los demás datos
-      // Nota: No necesitamos el puerto :3333 aquí porque el Balanceador (puerto 80) redirige solo.
-      await axios.post(`${API_URL}/api/auth/register`, {
+      // Asegúrate de que tu backend esté corriendo en el puerto 3333
+      await axios.post('http://localhost:3333/api/auth/register', {
         name,
         email,
         password,
